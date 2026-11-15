@@ -1,0 +1,116 @@
+import 'package:flutter_gms_demo/core/models/privilege.dart';
+import 'package:flutter_gms_demo/core/models/user_account.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:hooks_riverpod/misc.dart';
+import 'package:material_ui/material_ui.dart';
+import 'package:go_router/go_router.dart';
+import 'package:flutter_gms_demo/core/privilege_map.dart';
+import 'package:flutter_gms_demo/features/auth/providers/auth_notifier.dart';
+import 'package:flutter_gms_demo/features/auth/presentation/login_page.dart';
+import 'package:flutter_gms_demo/features/auth/presentation/forgot_password_page.dart';
+import 'package:flutter_gms_demo/features/home/presentation/landing_page.dart';
+import 'package:flutter_gms_demo/shared/layout/app_shell.dart';
+import 'package:flutter_gms_demo/shared/widgets/placeholder_page.dart';
+
+final routerProvider = Provider<GoRouter>((ref) {
+  final notifier = ValueNotifier<int>(0);
+  ref.listen(authProvider, (_, _) => notifier.value++);
+  ref.onDispose(notifier.dispose);
+
+  return GoRouter(
+    initialLocation: '/',
+    refreshListenable: notifier,
+    redirect: (context, state) {
+      final UserAccount? user = ref.read(authProvider);
+      final loc = state.uri.toString();
+
+      final publicPaths = {'/', '/login', '/forgot-password'};
+      final bool onPublic = publicPaths.contains(loc);
+
+      if (user == null && !onPublic) {
+        return '/login';
+      }
+      if (user != null && onPublic) {
+        return '/app/dashboard';
+      }
+
+      // Privilege guard for authenticated routes.
+      if (user != null && loc.startsWith('/app/')) {
+        final Set<Privilege> privileges = ref.read(
+          userPrivilegesProvider(user.roleId),
+        );
+        if (!PrivilegeMap.canAccess(loc, privileges)) {
+          return '/app/dashboard';
+        }
+      }
+      return null;
+    },
+    routes: [
+      GoRoute(path: '/', builder: (_, _) => const LandingPage()),
+      GoRoute(path: '/login', builder: (_, _) => const LoginPage()),
+      GoRoute(
+        path: '/forgot-password',
+        builder: (_, _) => const ForgotPasswordPage(),
+      ),
+      ShellRoute(
+        builder: (context, state, child) => AppShell(child: child),
+        routes: [
+          _appRoute('/app/dashboard', 'Dashboard'),
+          _appRoute('/app/user-accounts', 'User Accounts'),
+          _appRoute('/app/roles', 'Roles & Privileges'),
+          _appRoute('/app/lost-and-found', 'Lost & Found'),
+          _appRoute('/app/offenses', 'Offenses'),
+          _appRoute('/app/forms', 'Fill Out Forms'),
+          _appRoute('/app/request-forms', 'Request Forms'),
+          _appRoute('/app/approval', 'Approval Forms'),
+          _appRoute('/app/program', 'Guidance Program'),
+          _appRoute('/app/students', 'Students'),
+          _appRoute('/app/student-records', 'My Records'),
+          _appRoute('/app/child-records', 'My Child Records'),
+          _appRoute('/app/content', 'Content Management'),
+          _appRoute('/app/audit-trail', 'Audit Trail'),
+          _appRoute('/app/notifications', 'Notifications'),
+        ],
+      ),
+    ],
+  );
+});
+
+GoRoute _appRoute(String path, String title) => GoRoute(
+  path: path,
+  builder: (_, _) => PlaceholderPage(title: title),
+);
+
+/// Bridge: given a roleId, look up the seeded role's privileges.
+/// In Batch 2 this becomes `ref.watch(roleNotifierProvider.select(...))`
+/// once the roles feature exists.
+final ProviderFamily<Set<Privilege>, String> userPrivilegesProvider =
+    Provider.family<Set<Privilege>, String>((ref, roleId) {
+      // Batch 1 stub — real lookup lands with the Roles feature.
+      // For now, grant everything so all stubs are reachable during UI work.
+      return const {
+        Privilege.admin,
+        Privilege.manageExpiredItems,
+        Privilege.manageClaimedItems,
+        Privilege.viewOnlyFoundItems,
+        Privilege.addLostAndFound,
+        Privilege.deleteLostAndFound,
+        Privilege.editLostAndFound,
+        Privilege.fillOutForms,
+        Privilege.requestForm,
+        Privilege.approveForm,
+        Privilege.viewAccounts,
+        Privilege.viewGuidanceAccounts,
+        Privilege.viewParentAccounts,
+        Privilege.viewPrincipalAccounts,
+        Privilege.viewStudentAccounts,
+        Privilege.viewTeacherAccounts,
+        Privilege.manageWebsiteContent,
+        Privilege.manageRoles,
+        Privilege.viewStudentSummary,
+        Privilege.viewStudentsAnecdotal,
+        Privilege.writeStudentsAnecdotal,
+        Privilege.studentPrivileges,
+        Privilege.parentPrivileges,
+      };
+    });
