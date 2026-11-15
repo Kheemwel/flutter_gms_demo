@@ -6,3 +6,24 @@ analyzer:
     - android/**
     - web/**
     - windows/**
+    - "**/*.freezed.dart"
+    - "**/*.g.dart"
+  errors:
+    prefer_single_quotes: error
+    migrate_design_widgets: error
+    prefer_const_constructors: error
+    specify_nonobvious_property_types: error
+    specify_nonobvious_local_variable_types: error
+    avoid_relative_lib_imports: error
+
+plugins:
+  riverpod_lint: 3.2.0
+
+linter:
+  rules:
+    - prefer_single_quotes
+    - migrate_design_widgets
+    - prefer_const_constructors
+    - specify_nonobvious_property_types
+    - specify_nonobvious_local_variable_types
+    - avoid_relative_lib_imports
