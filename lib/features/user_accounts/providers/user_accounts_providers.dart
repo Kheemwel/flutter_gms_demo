@@ -10,9 +10,6 @@ import 'package:hooks_riverpod/misc.dart';
 
 enum UserAccountTab { active, archived }
 
-final StateProvider<UserAccountTab> userAccountTabProvider =
-    StateProvider<UserAccountTab>((ref) => UserAccountTab.active);
-
 final StateProvider<String> userAccountSearchProvider = StateProvider<String>(
   (ref) => '',
 );
@@ -25,32 +22,6 @@ final Provider<Map<String, RoleKind>> roleKindLookupProvider =
     Provider<Map<String, RoleKind>>((ref) {
       final List<Role> all = ref.watch(rolesProvider);
       return {for (final r in all) r.id: r.kind};
-    });
-
-final Provider<List<UserAccount>> filteredUsersProvider =
-    Provider<List<UserAccount>>((ref) {
-      final List<UserAccount> all = ref.watch(userAccountsProvider);
-      final UserAccountTab tab = ref.watch(userAccountTabProvider);
-      final String query = ref.watch(userAccountSearchProvider).trim();
-      final RoleKind? roleFilter = ref.watch(userAccountRoleFilterProvider);
-      final Map<String, RoleKind> kindsByRoleId = ref.watch(
-        roleKindLookupProvider,
-      );
-
-      final bool wantArchived = tab == UserAccountTab.archived;
-      final String q = query.toLowerCase();
-
-      return all
-          .where((UserAccount u) {
-            if (u.isArchived != wantArchived) return false;
-            if (roleFilter != null && kindsByRoleId[u.roleId] != roleFilter) {
-              return false;
-            }
-            if (q.isEmpty) return true;
-            return u.fullName.toLowerCase().contains(q) ||
-                u.email.toLowerCase().contains(q);
-          })
-          .toList(growable: false);
     });
 
 final Provider<({int active, int archived})> userCountsProvider =
@@ -75,4 +46,29 @@ final ProviderFamily<UserAccount?, String> userByIdProvider =
         if (u.id == id) return u;
       }
       return null;
+    });
+
+final ProviderFamily<List<UserAccount>, UserAccountTab> usersForTabProvider =
+    Provider.family<List<UserAccount>, UserAccountTab>((ref, tab) {
+      final List<UserAccount> all = ref.watch(userAccountsProvider);
+      final String query = ref.watch(userAccountSearchProvider).trim();
+      final RoleKind? roleFilter = ref.watch(userAccountRoleFilterProvider);
+      final Map<String, RoleKind> kindsByRoleId = ref.watch(
+        roleKindLookupProvider,
+      );
+
+      final bool wantArchived = tab == UserAccountTab.archived;
+      final String q = query.toLowerCase();
+
+      return all
+          .where((UserAccount u) {
+            if (u.isArchived != wantArchived) return false;
+            if (roleFilter != null && kindsByRoleId[u.roleId] != roleFilter) {
+              return false;
+            }
+            if (q.isEmpty) return true;
+            return u.fullName.toLowerCase().contains(q) ||
+                u.email.toLowerCase().contains(q);
+          })
+          .toList(growable: false);
     });

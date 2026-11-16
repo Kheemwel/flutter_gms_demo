@@ -62,5 +62,13 @@ class Auth extends _$Auth {
     );
   }
 
+  /// Demo-only: flips `mustChangePassword` off. A real app would
+  /// verify the current password and store the new hash.
+  void changePassword({required String newPassword}) {
+    final UserAccount? current = state;
+    if (current == null) return;
+    state = current.copyWith(mustChangePassword: false);
+  }
+
   void logout() => state = null;
 }

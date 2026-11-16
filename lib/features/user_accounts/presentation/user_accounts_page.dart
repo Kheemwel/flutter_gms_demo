@@ -1,5 +1,7 @@
 import 'package:flutter_gms_demo/core/extensions/user_role_x.dart';
 import 'package:flutter_gms_demo/core/models/role.dart';
+import 'package:flutter_gms_demo/features/user_accounts/presentation/role_picker_dialog.dart';
+import 'package:flutter_gms_demo/features/user_accounts/presentation/user_form_dialog.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -38,7 +40,7 @@ class UserAccountsPage extends ConsumerWidget {
         if (canManage)
           FilledButton.icon(
             // TODO(Batch 3 part 2): open add-user flow
-            onPressed: () => _showPlaceholder(context, 'Add user'),
+            onPressed: () => _openAddFlow(context, ref),
             icon: const Icon(Icons.person_add_alt_1_rounded),
             label: const Text('Add user'),
           ),
@@ -69,6 +71,27 @@ class UserAccountsPage extends ConsumerWidget {
       SnackBar(content: Text('$label will land in a later batch.')),
     );
   }
+
+  Future<void> _openAddFlow(BuildContext context, WidgetRef ref) async {
+    final RoleKind? kind = await showRolePicker(context);
+    if (kind == null || !context.mounted) return;
+    final UserAccount? created = await showUserForm(context, kind: kind);
+    if (created == null || !context.mounted) return;
+    // Record in audit log
+    final UserAccount? me = ref.read(authProvider);
+    ref
+        .read(auditLogsProvider.notifier)
+        .record(
+          userAccountId: me?.id ?? 'system',
+          action: 'Create User',
+          description:
+              'Created ${created.roleId} account '
+              '"${created.fullName}" (${created.email})',
+        );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('"${created.fullName}" created.')));
+  }
 }
 
 class _UserListView extends ConsumerStatefulWidget {
@@ -87,7 +110,7 @@ class _UserListViewState extends ConsumerState<_UserListView>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    final List<UserAccount> users = ref.watch(filteredUsersProvider);
+    final List<UserAccount> users = ref.watch(usersForTabProvider(widget.tab));
     final String search = ref.watch(userAccountSearchProvider);
     final RoleKind? roleFilter = ref.watch(userAccountRoleFilterProvider);
     final bool canManage =
@@ -324,7 +347,22 @@ class _UsersTable extends ConsumerWidget {
         await _viewUser(context, user);
         return;
       case _RowAction.edit:
-        _showEditPlaceholder(context, user);
+        final UserAccount? created = await showUserForm(
+          context,
+          kind: _kindForUser(user, ref),
+          existing: user,
+        );
+        if (created == null) return;
+        audit.record(
+          userAccountId: me?.id ?? 'system',
+          action: 'Update User',
+          description: 'Updated user "${created.fullName}" (${created.email})',
+        );
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('"${created.fullName}" updated.')),
+          );
+        }
         return;
       case _RowAction.archive:
         final bool ok = await appConfirm(
@@ -387,15 +425,6 @@ class _UsersTable extends ConsumerWidget {
     }
   }
 
-  void _showEditPlaceholder(BuildContext context, UserAccount user) {
-    // TODO(Batch 3 part 2): open edit-user dialog
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Editing "${user.fullName}" will land next batch.'),
-      ),
-    );
-  }
-
   Future<void> _viewUser(BuildContext context, UserAccount user) {
     return showDialog<void>(
       context: context,
@@ -420,6 +449,11 @@ class _UsersTable extends ConsumerWidget {
     if (diff.inDays < 30) return '${diff.inDays}d ago';
     return '${d.year}-${d.month.toString().padLeft(2, '0')}-'
         '${d.day.toString().padLeft(2, '0')}';
+  }
+
+  RoleKind _kindForUser(UserAccount user, WidgetRef ref) {
+    final Role? role = ref.read(roleByIdProvider(user.roleId));
+    return role?.kind ?? RoleKind.student;
   }
 }
 

@@ -1,5 +1,6 @@
 import 'package:flutter_gms_demo/core/models/privilege.dart';
 import 'package:flutter_gms_demo/core/models/user_account.dart';
+import 'package:flutter_gms_demo/features/home/presentation/dashboard_page.dart';
 import 'package:flutter_gms_demo/features/user_accounts/presentation/user_accounts_page.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
@@ -52,7 +53,10 @@ final Provider<GoRouter> routerProvider = Provider<GoRouter>((ref) {
       ShellRoute(
         builder: (_, _, Widget child) => AppShell(child: child),
         routes: [
-          _appRoute('/app/dashboard', 'Dashboard'),
+          GoRoute(
+            path: '/app/dashboard',
+            builder: (_, _) => const DashboardPage(),
+          ),
           GoRoute(
             path: '/app/user-accounts',
             builder: (_, _) => const UserAccountsPage(),
