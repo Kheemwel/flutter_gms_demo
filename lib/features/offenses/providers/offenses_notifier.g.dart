@@ -89,7 +89,7 @@ final class OffensesProvider
   }
 }
 
-String _$offensesHash() => r'08ab3b83dc998848f2142620f8f37cb477ac8dc6';
+String _$offensesHash() => r'5340852afae17339211c00faf081b35147ac50e1';
 
 abstract class _$Offenses extends $Notifier<List<Offense>> {
   List<Offense> build();
@@ -141,7 +141,7 @@ final class OffenseCategoriesProvider
   }
 }
 
-String _$offenseCategoriesHash() => r'56418a32b1e22296d1a0fd3252ace39b4053b975';
+String _$offenseCategoriesHash() => r'e42580ef0a74fcebb6aada317adb1ac80cfa576d';
 
 abstract class _$OffenseCategories extends $Notifier<List<OffenseCategory>> {
   List<OffenseCategory> build();
@@ -193,7 +193,7 @@ final class OffenseLevelsProvider
   }
 }
 
-String _$offenseLevelsHash() => r'cd80402625ffbd838904126fecb9d46cb0dee417';
+String _$offenseLevelsHash() => r'051a16e30230e3199218c3ecba79ce808c6fc4df';
 
 abstract class _$OffenseLevels extends $Notifier<List<OffenseLevel>> {
   List<OffenseLevel> build();
@@ -246,7 +246,7 @@ final class DisciplinaryActionsProvider
 }
 
 String _$disciplinaryActionsHash() =>
-    r'cdea3786a4d393a25bb4a8aadcf9f7e8a7e47bc1';
+    r'5ebe361215779e83b3a7b040013095fe487ba5f2';
 
 abstract class _$DisciplinaryActions
     extends $Notifier<List<DisciplinaryAction>> {
