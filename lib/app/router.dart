@@ -2,6 +2,7 @@ import 'package:flutter_gms_demo/core/models/privilege.dart';
 import 'package:flutter_gms_demo/core/models/user_account.dart';
 import 'package:flutter_gms_demo/features/home/presentation/dashboard_page.dart';
 import 'package:flutter_gms_demo/features/lost_and_found/presentation/lost_and_found_page.dart';
+import 'package:flutter_gms_demo/features/offenses/presentation/offenses_page.dart';
 import 'package:flutter_gms_demo/features/user_accounts/presentation/user_accounts_page.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
@@ -67,7 +68,10 @@ final Provider<GoRouter> routerProvider = Provider<GoRouter>((ref) {
             path: '/app/lost-and-found',
             builder: (_, _) => const LostAndFoundPage(),
           ),
-          _appRoute('/app/offenses', 'Offenses'),
+          GoRoute(
+            path: '/app/offenses',
+            builder: (_, _) => const OffensesPage(),
+          ),
           _appRoute('/app/forms', 'Fill Out Forms'),
           _appRoute('/app/request-forms', 'Request Forms'),
           _appRoute('/app/approval', 'Approval Forms'),

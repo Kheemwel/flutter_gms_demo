@@ -89,7 +89,7 @@ final class LostAndFoundItemsProvider
   }
 }
 
-String _$lostAndFoundItemsHash() => r'160599b43e98e1da894cd9c0d52915b0f77bd0e7';
+String _$lostAndFoundItemsHash() => r'9a2701349dda731724db5347b852ab3d9af24d2d';
 
 abstract class _$LostAndFoundItems extends $Notifier<List<LostAndFoundItem>> {
   List<LostAndFoundItem> build();
@@ -142,7 +142,7 @@ final class ItemTypesProvider
   }
 }
 
-String _$itemTypesHash() => r'f2831afc436d556de85fcc00951b4c7d0c756dc5';
+String _$itemTypesHash() => r'b8787f495433234a9bc0ce5de8717155a3311b2a';
 
 abstract class _$ItemTypes extends $Notifier<List<ItemType>> {
   List<ItemType> build();
@@ -194,7 +194,7 @@ final class ItemTagsProvider
   }
 }
 
-String _$itemTagsHash() => r'5824deb63663676e34eeb11004d906eee6eadd31';
+String _$itemTagsHash() => r'30db26486b09df2e97d1e611bd12adee62f46f55';
 
 abstract class _$ItemTags extends $Notifier<List<ItemTag>> {
   List<ItemTag> build();
