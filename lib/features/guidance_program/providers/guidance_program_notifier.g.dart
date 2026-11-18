@@ -89,7 +89,7 @@ final class GuidanceProgramsProvider
   }
 }
 
-String _$guidanceProgramsHash() => r'74fa099ee7fc5e53b63dd957bdc96770fce5a5ec';
+String _$guidanceProgramsHash() => r'b36f2ca1e38f56a9628fcedcd038f3adbbf5d1a4';
 
 abstract class _$GuidancePrograms extends $Notifier<List<GuidanceProgram>> {
   List<GuidanceProgram> build();
@@ -142,7 +142,7 @@ final class GuidanceScheduleTagsProvider
 }
 
 String _$guidanceScheduleTagsHash() =>
-    r'1e6d6e45c50a9f034fc1102c35d02d5829462c92';
+    r'ee2ad07c1e0c8645433cfa4440c1ebbf57c05a90';
 
 abstract class _$GuidanceScheduleTags
     extends $Notifier<List<GuidanceScheduleTag>> {
