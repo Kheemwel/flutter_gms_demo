@@ -172,11 +172,7 @@ abstract class Form with _$Form {
         SignerRole.juniorPrincipal,
         SignerRole.seniorPrincipal,
       },
-      FormType.violation => const {
-        SignerRole.student,
-        SignerRole.teacher,
-        SignerRole.guidance,
-      },
+      FormType.violation => const {SignerRole.student, SignerRole.guidance},
     };
   }
 }

@@ -1,3 +1,4 @@
+import 'package:flutter_gms_demo/features/forms/presentation/dialogs/fill_form_dialog.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart' hide Form;
 
@@ -74,9 +75,7 @@ class FormsList extends ConsumerWidget {
       '${d.day.toString().padLeft(2, '0')}';
 
   Future<void> _open(BuildContext context, WidgetRef ref, Form form) async {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Fill-out dialog lands in Batch 7 part 2.')),
-    );
+    await showFillFormDialog(context, form: form);
   }
 
   Future<void> _delete(BuildContext context, WidgetRef ref, Form form) async {
