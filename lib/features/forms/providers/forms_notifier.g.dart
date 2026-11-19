@@ -51,11 +51,12 @@ final class FormsRepositoryProvider
 
 String _$formsRepositoryHash() => r'34f7abf9c2a2a4de73ef5320f148aefed3df9616';
 
-@ProviderFor(Forms)
-final formsProvider = FormsProvider._();
+@ProviderFor(FormsNotifier)
+final formsProvider = FormsNotifierProvider._();
 
-final class FormsProvider extends $NotifierProvider<Forms, List<Form>> {
-  FormsProvider._()
+final class FormsNotifierProvider
+    extends $NotifierProvider<FormsNotifier, List<Form>> {
+  FormsNotifierProvider._()
     : super(
         from: null,
         argument: null,
@@ -67,11 +68,11 @@ final class FormsProvider extends $NotifierProvider<Forms, List<Form>> {
       );
 
   @override
-  String debugGetCreateSourceHash() => _$formsHash();
+  String debugGetCreateSourceHash() => _$formsNotifierHash();
 
   @$internal
   @override
-  Forms create() => Forms();
+  FormsNotifier create() => FormsNotifier();
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(List<Form> value) {
@@ -82,9 +83,9 @@ final class FormsProvider extends $NotifierProvider<Forms, List<Form>> {
   }
 }
 
-String _$formsHash() => r'6623d391187e75948270bff4b000fd7de7c6e6b1';
+String _$formsNotifierHash() => r'ebcb85aaeb532654f4c886e6a3d87791d4207ba1';
 
-abstract class _$Forms extends $Notifier<List<Form>> {
+abstract class _$FormsNotifier extends $Notifier<List<Form>> {
   List<Form> build();
   @$mustCallSuper
   @override

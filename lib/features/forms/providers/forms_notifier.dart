@@ -8,7 +8,8 @@ part 'forms_notifier.g.dart';
 @Riverpod(keepAlive: true)
 FormsRepository formsRepository(Ref ref) => InMemoryFormsRepository();
 
-class Forms extends _$Forms {
+@Riverpod(keepAlive: true)
+class FormsNotifier extends _$FormsNotifier {
   late FormsRepository _repo;
 
   @override
