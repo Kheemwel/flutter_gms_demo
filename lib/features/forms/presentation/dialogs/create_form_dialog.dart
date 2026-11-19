@@ -1,4 +1,6 @@
 import 'package:flutter_gms_demo/core/models/user_account.dart';
+import 'package:flutter_gms_demo/core/models/user_role.dart';
+import 'package:flutter_gms_demo/features/forms/form_helpers.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart' hide Form;
@@ -68,37 +70,33 @@ class _CreateFormDialog extends HookConsumerWidget {
       final List<UserAccount> chosenStudents = students
           .where((s) => studentIds.value.contains(s.id))
           .toList();
-      final List<String> studentNames = chosenStudents
-          .map((s) => s.fullName)
-          .toList();
 
       final id = '${DateTime.now().millisecondsSinceEpoch}';
       final now = DateTime.now();
 
       final Form form = type == FormType.violation
-          ? Form(
-              id: id,
-              formType: FormType.violation,
-              status: FormStatus.incomplete,
-              createdByUserId: me!.id,
-              createdAt: now,
-              data: FormData.violation(
-                teacherId: teacher.id,
-                teacherName: teacher.fullName,
-                studentIds: chosenStudents
-                    .map((s) => s.id)
-                    .toList(growable: false),
-                studentNames: studentNames,
-                guidanceId: me.id,
-                guidanceName: me.fullName,
-              ),
-            )
-          : _buildHomeVisitationForm(
-              id: id,
+          ? buildViolationForm(
+              formId: id,
               now: now,
-              me: me!,
+              createdBy: me!,
+              teacher: teacher,
+              students: chosenStudents,
+            )
+          : buildHomeVisitationForm(
+              formId: id,
+              now: now,
+              createdBy: me!,
               teacher: teacher,
               student: chosenStudents.single,
+              parent: _findParentUser(chosenStudents.single.id, ref),
+              juniorPrincipal: _findPrincipal(
+                ref,
+                PrincipalPosition.juniorHigh,
+              ),
+              seniorPrincipal: _findPrincipal(
+                ref,
+                PrincipalPosition.seniorHigh,
+              ),
             );
 
       await ref.read(formsProvider.notifier).add(form);
@@ -252,52 +250,24 @@ class _CreateFormDialog extends HookConsumerWidget {
     );
   }
 
-  /// Prefills the home visitation form from the student profile.
-  /// Centralized here so ApprovalForms (Batch 8) can reuse the same
-  /// prefill logic instead of the duplicated block in the original.
-  Form _buildHomeVisitationForm({
-    required String id,
-    required DateTime now,
-    required dynamic me,
-    required dynamic teacher,
-    required dynamic student,
-  }) {
-    final profile = student.profile as StudentProfile;
-    return Form(
-      id: id,
-      formType: FormType.homeVisitation,
-      status: FormStatus.incomplete,
-      createdByUserId: me.id,
-      createdAt: now,
-      data: FormData.homeVisitation(
-        studentId: student.id,
-        studentName: student.fullName,
-        teacherId: teacher.id,
-        teacherName: teacher.fullName,
-        guidanceId: me.id,
-        guidanceName: me.fullName,
-        parentId: _findParentOf(student.id),
-        parentName: _findParentNameOf(student.id),
-        juniorPrincipalId: 'user-6',
-        juniorPrincipalName: 'Junior Principal',
-        seniorPrincipalId: 'user-7',
-        seniorPrincipalName: 'Senior Principal',
-        fields: {
-          'student_surname': student.lastName,
-          'student_firstname': student.firstName,
-          'lrn': profile.lrn,
-          'level_section': '${profile.gradeLevel.label} Mars',
-        },
+  UserAccount _findParentUser(String studentId, WidgetRef ref) {
+    final List<UserAccount> users = ref.read(userAccountsProvider);
+    return users.firstWhere(
+      (u) =>
+          u.profile is ParentProfile &&
+          (u.profile as ParentProfile).childIds.contains(studentId),
+      orElse: () => throw StateError(
+        'No parent exists for student $studentId. Create one first.',
       ),
     );
   }
 
-  String _findParentOf(String studentId) {
-    // Returns the first parent user id that has this student as a child.
-    // Uses a static lookup for the demo. Real implementation would
-    // query the parents index.
-    return 'user-4';
+  UserAccount _findPrincipal(WidgetRef ref, PrincipalPosition pos) {
+    final List<UserAccount> users = ref.read(userAccountsProvider);
+    return users.firstWhere(
+      (u) =>
+          u.profile is PrincipalProfile &&
+          (u.profile as PrincipalProfile).position == pos,
+    );
   }
-
-  String _findParentNameOf(String studentId) => 'Pat Parent';
 }
