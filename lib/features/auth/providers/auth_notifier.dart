@@ -1,3 +1,4 @@
+import 'package:flutter_gms_demo/features/audit_trail/providers/audit_log_notifier.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'package:flutter_gms_demo/core/models/user_account.dart';
@@ -52,6 +53,13 @@ class Auth extends _$Auth {
       rememberToken: rememberMe ? 'demo-remember-token' : null,
     );
     state = updated;
+    ref
+        .read(auditLogsProvider.notifier)
+        .log(
+          userAccountId: updated.id,
+          action: 'Login',
+          description: '${updated.fullName} signed in.',
+        );
     return LoginSuccess(updated);
   }
 
@@ -70,5 +78,17 @@ class Auth extends _$Auth {
     state = current.copyWith(mustChangePassword: false);
   }
 
-  void logout() => state = null;
+  void logout() {
+    final UserAccount? me = state;
+    if (me != null) {
+      ref
+          .read(auditLogsProvider.notifier)
+          .log(
+            userAccountId: me.id,
+            action: 'Logout',
+            description: '${me.fullName} signed out.',
+          );
+    }
+    state = null;
+  }
 }

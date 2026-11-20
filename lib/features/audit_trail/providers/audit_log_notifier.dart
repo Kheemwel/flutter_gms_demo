@@ -1,43 +1,36 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:flutter_gms_demo/core/models/user_account.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-part 'audit_log_notifier.freezed.dart';
+import 'package:flutter_gms_demo/core/models/audit_log.dart';
+import 'package:flutter_gms_demo/features/auth/providers/auth_notifier.dart';
+
 part 'audit_log_notifier.g.dart';
 
-@freezed
-abstract class AuditLog with _$AuditLog {
-  const factory AuditLog({
-    required String id,
-    required String userAccountId,
-    required String action,
-    required String description,
-    required DateTime createdAt,
-  }) = _AuditLog;
-}
-
 @Riverpod(keepAlive: true)
-class AuditLogs extends _$AuditLogs {
+class AuditLogsNotifier extends _$AuditLogsNotifier {
   @override
   List<AuditLog> build() => const <AuditLog>[];
 
-  void record({
+  void log({
     required String userAccountId,
     required String action,
     required String description,
   }) {
-    state = [
-      AuditLog(
-        id: 'audit-${DateTime.now().microsecondsSinceEpoch}',
-        userAccountId: userAccountId,
-        action: action,
-        description: description,
-        createdAt: DateTime.now(),
-      ),
-      ...state,
-    ];
+    final UserAccount? me = ref.read(authProvider);
+    final entry = AuditLog(
+      id: 'audit-${DateTime.now().microsecondsSinceEpoch}',
+      userAccountId: userAccountId,
+      userFullName: userAccountId == me?.id ? me?.fullName : null,
+      action: action,
+      description: description,
+      createdAt: DateTime.now(),
+    );
+    state = [entry, ...state];
   }
 
   void delete(String id) {
     state = state.where((a) => a.id != id).toList(growable: false);
   }
+
+  void clearAll() => state = const <AuditLog>[];
 }

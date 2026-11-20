@@ -81,7 +81,7 @@ class UserAccountsPage extends ConsumerWidget {
     final UserAccount? me = ref.read(authProvider);
     ref
         .read(auditLogsProvider.notifier)
-        .record(
+        .log(
           userAccountId: me?.id ?? 'system',
           action: 'Create User',
           description:
@@ -339,7 +339,7 @@ class _UsersTable extends ConsumerWidget {
     _RowAction action,
   ) async {
     final UserAccounts notifier = ref.read(userAccountsProvider.notifier);
-    final AuditLogs audit = ref.read(auditLogsProvider.notifier);
+    final AuditLogsNotifier audit = ref.read(auditLogsProvider.notifier);
     final UserAccount? me = ref.read(authProvider);
 
     switch (action) {
@@ -353,7 +353,7 @@ class _UsersTable extends ConsumerWidget {
           existing: user,
         );
         if (created == null) return;
-        audit.record(
+        audit.log(
           userAccountId: me?.id ?? 'system',
           action: 'Update User',
           description: 'Updated user "${created.fullName}" (${created.email})',
@@ -375,7 +375,7 @@ class _UsersTable extends ConsumerWidget {
         );
         if (!ok) return;
         await notifier.archive(user.id);
-        audit.record(
+        audit.log(
           userAccountId: me?.id ?? 'system',
           action: 'Archive User',
           description: 'Archived user "${user.fullName}" (${user.email})',
@@ -388,7 +388,7 @@ class _UsersTable extends ConsumerWidget {
         return;
       case _RowAction.unarchive:
         await notifier.unarchive(user.id);
-        audit.record(
+        audit.log(
           userAccountId: me?.id ?? 'system',
           action: 'Restore User',
           description: 'Restored user "${user.fullName}" (${user.email})',
@@ -411,7 +411,7 @@ class _UsersTable extends ConsumerWidget {
         );
         if (!ok) return;
         await notifier.delete(user.id);
-        audit.record(
+        audit.log(
           userAccountId: me?.id ?? 'system',
           action: 'Delete User',
           description: 'Deleted user "${user.fullName}" (${user.email})',

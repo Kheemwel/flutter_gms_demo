@@ -9,12 +9,12 @@ part of 'audit_log_notifier.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
-@ProviderFor(AuditLogs)
-final auditLogsProvider = AuditLogsProvider._();
+@ProviderFor(AuditLogsNotifier)
+final auditLogsProvider = AuditLogsNotifierProvider._();
 
-final class AuditLogsProvider
-    extends $NotifierProvider<AuditLogs, List<AuditLog>> {
-  AuditLogsProvider._()
+final class AuditLogsNotifierProvider
+    extends $NotifierProvider<AuditLogsNotifier, List<AuditLog>> {
+  AuditLogsNotifierProvider._()
     : super(
         from: null,
         argument: null,
@@ -26,11 +26,11 @@ final class AuditLogsProvider
       );
 
   @override
-  String debugGetCreateSourceHash() => _$auditLogsHash();
+  String debugGetCreateSourceHash() => _$auditLogsNotifierHash();
 
   @$internal
   @override
-  AuditLogs create() => AuditLogs();
+  AuditLogsNotifier create() => AuditLogsNotifier();
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(List<AuditLog> value) {
@@ -41,9 +41,9 @@ final class AuditLogsProvider
   }
 }
 
-String _$auditLogsHash() => r'a4f52ca0917d34896450bcd3f2704b956f3d19a2';
+String _$auditLogsNotifierHash() => r'586c6a2dc7f791069e75dd9be1a0868410840eed';
 
-abstract class _$AuditLogs extends $Notifier<List<AuditLog>> {
+abstract class _$AuditLogsNotifier extends $Notifier<List<AuditLog>> {
   List<AuditLog> build();
   @$mustCallSuper
   @override

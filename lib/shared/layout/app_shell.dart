@@ -1,5 +1,9 @@
 import 'package:flutter_gms_demo/core/extensions/theme_x.dart';
 import 'package:flutter_gms_demo/core/models/privilege.dart';
+import 'package:flutter_gms_demo/core/models/site_content.dart';
+import 'package:flutter_gms_demo/core/utilities/logo_palette.dart';
+import 'package:flutter_gms_demo/features/content_management/providers/site_content_notifier.dart';
+import 'package:flutter_gms_demo/features/notifications/providers/notifications_notifier.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:go_router/go_router.dart';
@@ -144,9 +148,11 @@ class _Sidebar extends ConsumerWidget {
   }
 }
 
-class _BrandBlock extends StatelessWidget {
+class _BrandBlock extends ConsumerWidget {
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final SiteContent content = ref.watch(siteContentProvider);
+
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Row(
@@ -157,10 +163,7 @@ class _BrandBlock extends StatelessWidget {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(10),
               gradient: LinearGradient(
-                colors: [
-                  context.colorScheme.primary,
-                  context.colorScheme.tertiary,
-                ],
+                colors: logoPalette(context, content.logoPreset),
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -176,7 +179,12 @@ class _BrandBlock extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('GMS Demo', style: context.textTheme.titleMedium),
+                Text(
+                  content.schoolName.isEmpty ? 'GMS Demo' : content.schoolName,
+                  style: context.textTheme.titleMedium,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
                 Text('v0.1.0', style: context.textTheme.bodySmall),
               ],
             ),
@@ -193,25 +201,96 @@ class _TopBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final ColorScheme scheme = context.colorScheme;
+    final List<AppNotification> notifications = ref.watch(
+      appNotificationsProvider,
+    );
+    final int unread = notifications
+        .where((n) => n.toUserId == user.id && !n.isRead)
+        .length;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       child: Row(
         children: [
-          Text('Flutter GMS Demo', style: context.textTheme.titleMedium),
+          Text(
+            ref.watch(siteContentProvider.select((selector) => selector.title)),
+            style: context.textTheme.titleMedium,
+          ),
           const Spacer(),
-          IconButton(
+          PopupMenuButton<String>(
             tooltip: 'Notifications',
-            onPressed: () => context.go('/app/notifications'),
-            icon: const Icon(Icons.notifications_none_rounded),
+            offset: const Offset(0, 44),
+            onSelected: (value) {
+              if (value == 'view') {
+                context.go('/app/notifications');
+              } else if (value == 'read') {
+                ref
+                    .read(appNotificationsProvider.notifier)
+                    .markAllReadFor(user.id);
+              }
+            },
+            itemBuilder: (_) => [
+              const PopupMenuItem(
+                value: 'view',
+                child: ListTile(
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(Icons.list_alt_rounded),
+                  title: Text('View all notifications'),
+                ),
+              ),
+              if (unread > 0)
+                const PopupMenuItem(
+                  value: 'read',
+                  child: ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(Icons.done_all_rounded),
+                    title: Text('Mark all read'),
+                  ),
+                ),
+            ],
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                const IconButton(
+                  onPressed: null, // handled by popup
+                  icon: Icon(Icons.notifications_none_rounded),
+                ),
+                if (unread > 0)
+                  Positioned(
+                    right: 6,
+                    top: 6,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 5,
+                        vertical: 1,
+                      ),
+                      decoration: BoxDecoration(
+                        color: scheme.error,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        unread > 9 ? '9+' : '$unread',
+                        style: context.textTheme.labelSmall?.copyWith(
+                          color: scheme.onError,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ),
           const SizedBox(width: 8),
           CircleAvatar(
             radius: 18,
-            backgroundColor: context.colorScheme.primaryContainer,
+            backgroundColor: scheme.primaryContainer,
             child: Text(
               user.firstName.substring(0, 1).toUpperCase(),
               style: TextStyle(
-                color: context.colorScheme.onPrimaryContainer,
+                color: scheme.onPrimaryContainer,
                 fontWeight: FontWeight.w600,
               ),
             ),

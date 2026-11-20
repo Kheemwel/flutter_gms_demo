@@ -1,11 +1,14 @@
 import 'package:flutter_gms_demo/core/models/privilege.dart';
 import 'package:flutter_gms_demo/core/models/user_account.dart';
+import 'package:flutter_gms_demo/features/audit_trail/presentation/audit_trail_page.dart';
+import 'package:flutter_gms_demo/features/content_management/presentation/content_management_page.dart';
 import 'package:flutter_gms_demo/features/forms/presentation/approval_forms_page.dart';
 import 'package:flutter_gms_demo/features/forms/presentation/forms_page.dart';
 import 'package:flutter_gms_demo/features/forms/presentation/request_forms_page.dart';
 import 'package:flutter_gms_demo/features/guidance_program/presentation/guidance_program_page.dart';
 import 'package:flutter_gms_demo/features/home/presentation/dashboard_page.dart';
 import 'package:flutter_gms_demo/features/lost_and_found/presentation/lost_and_found_page.dart';
+import 'package:flutter_gms_demo/features/notifications/presentation/notifications_page.dart';
 import 'package:flutter_gms_demo/features/offenses/presentation/offenses_page.dart';
 import 'package:flutter_gms_demo/features/user_accounts/presentation/user_accounts_page.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -92,9 +95,18 @@ final Provider<GoRouter> routerProvider = Provider<GoRouter>((ref) {
           _appRoute('/app/students', 'Students'),
           _appRoute('/app/student-records', 'My Records'),
           _appRoute('/app/child-records', 'My Child Records'),
-          _appRoute('/app/content', 'Content Management'),
-          _appRoute('/app/audit-trail', 'Audit Trail'),
-          _appRoute('/app/notifications', 'Notifications'),
+          GoRoute(
+            path: '/app/content',
+            builder: (_, _) => const ContentManagementPage(),
+          ),
+          GoRoute(
+            path: '/app/audit-trail',
+            builder: (_, _) => const AuditTrailPage(),
+          ),
+          GoRoute(
+            path: '/app/notifications',
+            builder: (_, _) => const NotificationsPage(),
+          ),
         ],
       ),
     ],

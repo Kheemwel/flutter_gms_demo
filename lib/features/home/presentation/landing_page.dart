@@ -1,4 +1,7 @@
 import 'package:flutter_gms_demo/core/extensions/theme_x.dart';
+import 'package:flutter_gms_demo/core/models/site_content.dart';
+import 'package:flutter_gms_demo/core/utilities/logo_palette.dart';
+import 'package:flutter_gms_demo/features/content_management/providers/site_content_notifier.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:go_router/go_router.dart';
@@ -11,6 +14,7 @@ class LandingPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final SiteContent content = ref.watch(siteContentProvider);
     return Scaffold(
       body: SafeArea(
         child: Center(
@@ -30,10 +34,7 @@ class LandingPage extends ConsumerWidget {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(24),
                         gradient: LinearGradient(
-                          colors: [
-                            context.colorScheme.primary,
-                            context.colorScheme.tertiary,
-                          ],
+                          colors: logoPalette(context, content.logoPreset),
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
@@ -47,7 +48,7 @@ class LandingPage extends ConsumerWidget {
                   ),
                   const SizedBox(height: 24),
                   Text(
-                    'Flutter GMS Demo',
+                    content.title,
                     textAlign: TextAlign.center,
                     style: context.textTheme.displaySmall?.copyWith(
                       color: context.colorScheme.onSurface,
@@ -55,8 +56,7 @@ class LandingPage extends ConsumerWidget {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'A showcase port of a guidance management system.\n'
-                    'Dummy data. No backend. Every screen is clickable.',
+                    content.subtitle,
                     textAlign: TextAlign.center,
                     style: context.textTheme.bodyLarge?.copyWith(
                       color: context.colorScheme.onSurfaceVariant,

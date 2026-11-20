@@ -3,7 +3,7 @@
 // ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
-part of 'audit_log_notifier.dart';
+part of 'audit_log.dart';
 
 // **************************************************************************
 // FreezedGenerator
@@ -15,7 +15,9 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$AuditLog {
 
- String get id; String get userAccountId; String get action; String get description; DateTime get createdAt;
+ String get id; String get userAccountId; String get action; String get description; DateTime get createdAt;/// Resolved at write time so the list doesn't need a lookup.
+/// Null for actions taken by "system" (scheduler, migrations).
+ String? get userFullName;
 /// Create a copy of AuditLog
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -27,20 +29,20 @@ $AuditLogCopyWith<AuditLog> get copyWith => _$AuditLogCopyWithImpl<AuditLog>(thi
 @override
 bool operator ==(Object other) {
   final _this = this as AuditLog;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuditLog&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.userAccountId, _this.userAccountId) || other.userAccountId == _this.userAccountId)&&(identical(other.action, _this.action) || other.action == _this.action)&&(identical(other.description, _this.description) || other.description == _this.description)&&(identical(other.createdAt, _this.createdAt) || other.createdAt == _this.createdAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuditLog&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.userAccountId, _this.userAccountId) || other.userAccountId == _this.userAccountId)&&(identical(other.action, _this.action) || other.action == _this.action)&&(identical(other.description, _this.description) || other.description == _this.description)&&(identical(other.createdAt, _this.createdAt) || other.createdAt == _this.createdAt)&&(identical(other.userFullName, _this.userFullName) || other.userFullName == _this.userFullName));
 }
 
 
 @override
 int get hashCode {
   final _this = this as AuditLog;
-  return Object.hash(runtimeType,_this.id,_this.userAccountId,_this.action,_this.description,_this.createdAt);
+  return Object.hash(runtimeType,_this.id,_this.userAccountId,_this.action,_this.description,_this.createdAt,_this.userFullName);
 }
 
 @override
 String toString() {
   final _this = this as AuditLog;
-  return 'AuditLog(id: ${_this.id}, userAccountId: ${_this.userAccountId}, action: ${_this.action}, description: ${_this.description}, createdAt: ${_this.createdAt})';
+  return 'AuditLog(id: ${_this.id}, userAccountId: ${_this.userAccountId}, action: ${_this.action}, description: ${_this.description}, createdAt: ${_this.createdAt}, userFullName: ${_this.userFullName})';
 }
 
 
@@ -51,7 +53,7 @@ abstract mixin class $AuditLogCopyWith<$Res>  {
   factory $AuditLogCopyWith(AuditLog value, $Res Function(AuditLog) _then) = _$AuditLogCopyWithImpl;
 @useResult
 $Res call({
- String id, String userAccountId, String action, String description, DateTime createdAt
+ String id, String userAccountId, String action, String description, DateTime createdAt, String? userFullName
 });
 
 
@@ -68,14 +70,15 @@ class _$AuditLogCopyWithImpl<$Res>
 
 /// Create a copy of AuditLog
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? userAccountId = null,Object? action = null,Object? description = null,Object? createdAt = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? userAccountId = null,Object? action = null,Object? description = null,Object? createdAt = null,Object? userFullName = freezed,}) {
   return _then(AuditLog(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,userAccountId: null == userAccountId ? _self.userAccountId : userAccountId // ignore: cast_nullable_to_non_nullable
 as String,action: null == action ? _self.action : action // ignore: cast_nullable_to_non_nullable
 as String,description: null == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
-as DateTime,
+as DateTime,userFullName: freezed == userFullName ? _self.userFullName : userFullName // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
@@ -160,10 +163,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String userAccountId,  String action,  String description,  DateTime createdAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String userAccountId,  String action,  String description,  DateTime createdAt,  String? userFullName)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _AuditLog() when $default != null:
-return $default(_that.id,_that.userAccountId,_that.action,_that.description,_that.createdAt);case _:
+return $default(_that.id,_that.userAccountId,_that.action,_that.description,_that.createdAt,_that.userFullName);case _:
   return orElse();
 
 }
@@ -181,10 +184,10 @@ return $default(_that.id,_that.userAccountId,_that.action,_that.description,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String userAccountId,  String action,  String description,  DateTime createdAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String userAccountId,  String action,  String description,  DateTime createdAt,  String? userFullName)  $default,) {final _that = this;
 switch (_that) {
 case _AuditLog():
-return $default(_that.id,_that.userAccountId,_that.action,_that.description,_that.createdAt);case _:
+return $default(_that.id,_that.userAccountId,_that.action,_that.description,_that.createdAt,_that.userFullName);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -201,10 +204,10 @@ return $default(_that.id,_that.userAccountId,_that.action,_that.description,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String userAccountId,  String action,  String description,  DateTime createdAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String userAccountId,  String action,  String description,  DateTime createdAt,  String? userFullName)?  $default,) {final _that = this;
 switch (_that) {
 case _AuditLog() when $default != null:
-return $default(_that.id,_that.userAccountId,_that.action,_that.description,_that.createdAt);case _:
+return $default(_that.id,_that.userAccountId,_that.action,_that.description,_that.createdAt,_that.userFullName);case _:
   return null;
 
 }
@@ -216,7 +219,7 @@ return $default(_that.id,_that.userAccountId,_that.action,_that.description,_tha
 
 
 class _AuditLog implements AuditLog {
-  const _AuditLog({required this.id, required this.userAccountId, required this.action, required this.description, required this.createdAt});
+  const _AuditLog({required this.id, required this.userAccountId, required this.action, required this.description, required this.createdAt, this.userFullName});
   
 
 @override final  String id;
@@ -224,6 +227,9 @@ class _AuditLog implements AuditLog {
 @override final  String action;
 @override final  String description;
 @override final  DateTime createdAt;
+/// Resolved at write time so the list doesn't need a lookup.
+/// Null for actions taken by "system" (scheduler, migrations).
+@override final  String? userFullName;
 
 /// Create a copy of AuditLog
 /// with the given fields replaced by the non-null parameter values.
@@ -235,18 +241,18 @@ _$AuditLogCopyWith<_AuditLog> get copyWith => __$AuditLogCopyWithImpl<_AuditLog>
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AuditLog&&(identical(other.id, id) || other.id == id)&&(identical(other.userAccountId, userAccountId) || other.userAccountId == userAccountId)&&(identical(other.action, action) || other.action == action)&&(identical(other.description, description) || other.description == description)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AuditLog&&(identical(other.id, id) || other.id == id)&&(identical(other.userAccountId, userAccountId) || other.userAccountId == userAccountId)&&(identical(other.action, action) || other.action == action)&&(identical(other.description, description) || other.description == description)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.userFullName, userFullName) || other.userFullName == userFullName));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,userAccountId,action,description,createdAt);
+    return Object.hash(runtimeType,id,userAccountId,action,description,createdAt,userFullName);
 }
 
 @override
 String toString() {
-    return 'AuditLog(id: $id, userAccountId: $userAccountId, action: $action, description: $description, createdAt: $createdAt)';
+    return 'AuditLog(id: $id, userAccountId: $userAccountId, action: $action, description: $description, createdAt: $createdAt, userFullName: $userFullName)';
 }
 
 
@@ -257,7 +263,7 @@ abstract mixin class _$AuditLogCopyWith<$Res> implements $AuditLogCopyWith<$Res>
   factory _$AuditLogCopyWith(_AuditLog value, $Res Function(_AuditLog) _then) = __$AuditLogCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String userAccountId, String action, String description, DateTime createdAt
+ String id, String userAccountId, String action, String description, DateTime createdAt, String? userFullName
 });
 
 
@@ -274,14 +280,15 @@ class __$AuditLogCopyWithImpl<$Res>
 
 /// Create a copy of AuditLog
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? userAccountId = null,Object? action = null,Object? description = null,Object? createdAt = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? userAccountId = null,Object? action = null,Object? description = null,Object? createdAt = null,Object? userFullName = freezed,}) {
   return _then(_AuditLog(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,userAccountId: null == userAccountId ? _self.userAccountId : userAccountId // ignore: cast_nullable_to_non_nullable
 as String,action: null == action ? _self.action : action // ignore: cast_nullable_to_non_nullable
 as String,description: null == description ? _self.description : description // ignore: cast_nullable_to_non_nullable
 as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
-as DateTime,
+as DateTime,userFullName: freezed == userFullName ? _self.userFullName : userFullName // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 

@@ -90,7 +90,7 @@ final class FormRequestsNotifierProvider
 }
 
 String _$formRequestsNotifierHash() =>
-    r'e4a4d1916cebdb546fc5a580ed8badba4cab5c85';
+    r'f258f590ec1f2102131a481538c5efabb27305ab';
 
 abstract class _$FormRequestsNotifier extends $Notifier<List<FormRequest>> {
   List<FormRequest> build();
