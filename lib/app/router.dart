@@ -10,6 +10,9 @@ import 'package:flutter_gms_demo/features/home/presentation/dashboard_page.dart'
 import 'package:flutter_gms_demo/features/lost_and_found/presentation/lost_and_found_page.dart';
 import 'package:flutter_gms_demo/features/notifications/presentation/notifications_page.dart';
 import 'package:flutter_gms_demo/features/offenses/presentation/offenses_page.dart';
+import 'package:flutter_gms_demo/features/student_records/presentation/my_child_records_page.dart';
+import 'package:flutter_gms_demo/features/student_records/presentation/my_records_page.dart';
+import 'package:flutter_gms_demo/features/student_records/presentation/students_page.dart';
 import 'package:flutter_gms_demo/features/user_accounts/presentation/user_accounts_page.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
@@ -23,7 +26,6 @@ import 'package:flutter_gms_demo/features/home/presentation/landing_page.dart';
 import 'package:flutter_gms_demo/features/roles/presentation/roles_page.dart';
 import 'package:flutter_gms_demo/features/roles/providers/role_providers.dart';
 import 'package:flutter_gms_demo/shared/layout/app_shell.dart';
-import 'package:flutter_gms_demo/shared/widgets/placeholder_page.dart';
 
 final Provider<GoRouter> routerProvider = Provider<GoRouter>((ref) {
   final ValueNotifier<int> notifier = ValueNotifier<int>(0);
@@ -92,9 +94,18 @@ final Provider<GoRouter> routerProvider = Provider<GoRouter>((ref) {
             path: '/app/program',
             builder: (_, _) => const GuidanceProgramPage(),
           ),
-          _appRoute('/app/students', 'Students'),
-          _appRoute('/app/student-records', 'My Records'),
-          _appRoute('/app/child-records', 'My Child Records'),
+          GoRoute(
+            path: '/app/students',
+            builder: (_, _) => const StudentsPage(),
+          ),
+          GoRoute(
+            path: '/app/student-records',
+            builder: (_, _) => const MyRecordsPage(),
+          ),
+          GoRoute(
+            path: '/app/child-records',
+            builder: (_, _) => const MyChildRecordsPage(),
+          ),
           GoRoute(
             path: '/app/content',
             builder: (_, _) => const ContentManagementPage(),
@@ -112,8 +123,3 @@ final Provider<GoRouter> routerProvider = Provider<GoRouter>((ref) {
     ],
   );
 });
-
-GoRoute _appRoute(String path, String title) => GoRoute(
-  path: path,
-  builder: (_, _) => PlaceholderPage(title: title),
-);
