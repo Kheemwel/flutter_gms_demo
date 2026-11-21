@@ -1,4 +1,6 @@
 import 'package:flutter_gms_demo/core/models/user_account.dart';
+import 'package:flutter_gms_demo/features/student_records/presentation/dialogs/write_anecdotal_dialog.dart';
+import 'package:flutter_gms_demo/features/user_accounts/providers/user_accounts_providers.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -37,45 +39,72 @@ class AnecdotalListView extends ConsumerWidget {
     final List<StudentAnecdotal> entries = ref
         .watch(studentAnecdotalsProvider.notifier)
         .forStudent(studentId);
-    final bool canDelete = ref.can(Privilege.writeStudentsAnecdotal);
+    final bool canWrite = ref.can(Privilege.writeStudentsAnecdotal);
+    final UserAccount? student = ref.watch(userByIdProvider(studentId));
 
-    if (entries.isEmpty) {
-      return const AppEmptyState(
-        icon: Icons.notes_rounded,
-        title: 'No anecdotal entries',
-        message: 'Observations and notes about this student will appear here.',
-      );
-    }
+    final StatelessWidget body = entries.isEmpty
+        ? const AppEmptyState(
+            icon: Icons.notes_rounded,
+            title: 'No anecdotal entries',
+            message:
+                'Observations and notes about this student will appear here.',
+          )
+        : ListView.separated(
+            itemCount: entries.length,
+            separatorBuilder: (_, _) => const SizedBox(height: 8),
+            itemBuilder: (context, i) {
+              final StudentAnecdotal entry = entries[i];
+              return _AnecdotalCard(
+                entry: entry,
+                viewerRole: viewerRole,
+                isAuthor: me?.id == entry.authorUserId,
+                onDelete: () => canWrite ? _delete(context, ref, entry) : null,
+                onSignAsStudent: viewerRole == AnecdotalViewerRole.student
+                    ? () => ref
+                          .read(studentAnecdotalsProvider.notifier)
+                          .setStudentSignature(
+                            anecdotalId: entry.id,
+                            dataUrl: stubSignatureDataUrl,
+                          )
+                    : null,
+                onSignAsParent: viewerRole == AnecdotalViewerRole.parent
+                    ? () => ref
+                          .read(studentAnecdotalsProvider.notifier)
+                          .setParentSignature(
+                            anecdotalId: entry.id,
+                            dataUrl: stubSignatureDataUrl,
+                          )
+                    : null,
+              );
+            },
+          );
 
-    return ListView.separated(
-      itemCount: entries.length,
-      separatorBuilder: (_, _) => const SizedBox(height: 8),
-      itemBuilder: (context, i) {
-        final StudentAnecdotal entry = entries[i];
-        return _AnecdotalCard(
-          entry: entry,
-          viewerRole: viewerRole,
-          isAuthor: me?.id == entry.authorUserId,
-          canDelete: canDelete,
-          onDelete: () => _delete(context, ref, entry),
-          onSignAsStudent: viewerRole == AnecdotalViewerRole.student
-              ? () => ref
-                    .read(studentAnecdotalsProvider.notifier)
-                    .setStudentSignature(
-                      anecdotalId: entry.id,
-                      dataUrl: stubSignatureDataUrl,
-                    )
-              : null,
-          onSignAsParent: viewerRole == AnecdotalViewerRole.parent
-              ? () => ref
-                    .read(studentAnecdotalsProvider.notifier)
-                    .setParentSignature(
-                      anecdotalId: entry.id,
-                      dataUrl: stubSignatureDataUrl,
-                    )
-              : null,
-        );
-      },
+    if (!canWrite || student == null) return body;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Align(
+          alignment: Alignment.centerRight,
+          child: FilledButton.icon(
+            onPressed: () async {
+              final StudentAnecdotal? created = await showWriteAnecdotalDialog(
+                context,
+                student: student,
+              );
+              if (created != null && context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Anecdotal entry saved.')),
+                );
+              }
+            },
+            icon: const Icon(Icons.note_add_rounded),
+            label: const Text('Write entry'),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Expanded(child: body),
+      ],
     );
   }
 
@@ -102,7 +131,6 @@ class _AnecdotalCard extends StatelessWidget {
     required this.entry,
     required this.viewerRole,
     required this.isAuthor,
-    required this.canDelete,
     required this.onDelete,
     this.onSignAsStudent,
     this.onSignAsParent,
@@ -111,8 +139,7 @@ class _AnecdotalCard extends StatelessWidget {
   final StudentAnecdotal entry;
   final AnecdotalViewerRole viewerRole;
   final bool isAuthor;
-  final bool canDelete;
-  final VoidCallback onDelete;
+  final VoidCallback? onDelete;
   final VoidCallback? onSignAsStudent;
   final VoidCallback? onSignAsParent;
 
@@ -138,7 +165,7 @@ class _AnecdotalCard extends StatelessWidget {
                   style: context.textTheme.bodySmall,
                 ),
                 const Spacer(),
-                if (canDelete)
+                if (onDelete != null)
                   IconButton(
                     tooltip: 'Delete entry',
                     onPressed: onDelete,
