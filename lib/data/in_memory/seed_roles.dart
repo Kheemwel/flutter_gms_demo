@@ -52,6 +52,8 @@ final List<Role> seedRoles = [
       Privilege.fillOutForms,
       Privilege.requestForm,
       Privilege.viewOnlyFoundItems,
+      Privilege.viewStudentSummary,
+      Privilege.viewStudentsAnecdotal,
     },
   ),
   const Role(
