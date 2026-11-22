@@ -72,6 +72,7 @@ class ContentManagementPage extends HookConsumerWidget {
           .read(auditLogsProvider.notifier)
           .log(
             userAccountId: me?.id ?? 'system',
+            userFullName: me?.fullName,
             action: 'Update Site Content',
             description: 'Updated website title/subtitle/school/logo.',
           );

@@ -1,5 +1,6 @@
 import 'package:flutter_gms_demo/core/models/user_account.dart';
 import 'package:flutter_gms_demo/core/models/user_role.dart';
+import 'package:flutter_gms_demo/features/audit_trail/providers/audit_log_notifier.dart';
 import 'package:flutter_gms_demo/features/forms/form_helpers.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -100,6 +101,16 @@ class _CreateFormDialog extends HookConsumerWidget {
             );
 
       await ref.read(formsProvider.notifier).add(form);
+
+      ref
+          .read(auditLogsProvider.notifier)
+          .log(
+            userAccountId: me.id,
+            userFullName: me.fullName,
+            action: 'Create Form',
+            description:
+                '${me.fullName} created ${form.displayId} (${type.label}).',
+          );
 
       // Notify every participant except the creator.
       final List<String> notifyIds = form.participants

@@ -83,6 +83,7 @@ class UserAccountsPage extends ConsumerWidget {
         .read(auditLogsProvider.notifier)
         .log(
           userAccountId: me?.id ?? 'system',
+          userFullName: me?.fullName,
           action: 'Create User',
           description:
               'Created ${created.roleId} account '
@@ -355,6 +356,7 @@ class _UsersTable extends ConsumerWidget {
         if (created == null) return;
         audit.log(
           userAccountId: me?.id ?? 'system',
+          userFullName: me?.fullName,
           action: 'Update User',
           description: 'Updated user "${created.fullName}" (${created.email})',
         );
@@ -377,6 +379,7 @@ class _UsersTable extends ConsumerWidget {
         await notifier.archive(user.id);
         audit.log(
           userAccountId: me?.id ?? 'system',
+          userFullName: me?.fullName,
           action: 'Archive User',
           description: 'Archived user "${user.fullName}" (${user.email})',
         );
@@ -390,6 +393,7 @@ class _UsersTable extends ConsumerWidget {
         await notifier.unarchive(user.id);
         audit.log(
           userAccountId: me?.id ?? 'system',
+          userFullName: me?.fullName,
           action: 'Restore User',
           description: 'Restored user "${user.fullName}" (${user.email})',
         );
@@ -413,6 +417,7 @@ class _UsersTable extends ConsumerWidget {
         await notifier.delete(user.id);
         audit.log(
           userAccountId: me?.id ?? 'system',
+          userFullName: me?.fullName,
           action: 'Delete User',
           description: 'Deleted user "${user.fullName}" (${user.email})',
         );

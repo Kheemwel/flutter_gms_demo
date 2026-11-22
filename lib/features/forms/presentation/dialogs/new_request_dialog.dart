@@ -1,4 +1,5 @@
 import 'package:flutter_gms_demo/core/models/user_account.dart';
+import 'package:flutter_gms_demo/features/audit_trail/providers/audit_log_notifier.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
@@ -90,6 +91,17 @@ class _NewRequestDialog extends HookConsumerWidget {
       );
 
       await ref.read(formRequestsProvider.notifier).add(request);
+
+      ref
+          .read(auditLogsProvider.notifier)
+          .log(
+            userAccountId: me.id,
+            userFullName: me.fullName,
+            action: 'Request Form',
+            description:
+                '${me.fullName} submitted ${request.displayId} '
+                '(${type.label}).',
+          );
 
       // Notify guidance users.
       final List<String> guidanceIds = users

@@ -53,21 +53,33 @@ class Auth extends _$Auth {
       rememberToken: rememberMe ? 'demo-remember-token' : null,
     );
     state = updated;
+
     ref
         .read(auditLogsProvider.notifier)
         .log(
           userAccountId: updated.id,
+          userFullName: updated.fullName,
           action: 'Login',
           description: '${updated.fullName} signed in.',
         );
+
     return LoginSuccess(updated);
   }
 
   void loginAs(UserAccount user) {
-    state = user.copyWith(
+    final UserAccount updated = user.copyWith(
       totalLogin: user.totalLogin + 1,
       lastLogin: DateTime.now(),
     );
+    state = updated;
+    ref
+        .read(auditLogsProvider.notifier)
+        .log(
+          userAccountId: updated.id,
+          userFullName: updated.fullName,
+          action: 'Login (demo shortcut)',
+          description: '${updated.fullName} signed in via demo shortcut.',
+        );
   }
 
   /// Demo-only: flips `mustChangePassword` off. A real app would
@@ -85,6 +97,7 @@ class Auth extends _$Auth {
           .read(auditLogsProvider.notifier)
           .log(
             userAccountId: me.id,
+            userFullName: me.fullName,
             action: 'Logout',
             description: '${me.fullName} signed out.',
           );

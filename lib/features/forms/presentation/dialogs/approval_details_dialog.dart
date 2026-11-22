@@ -2,6 +2,7 @@ import 'package:flutter_gms_demo/core/extensions/privilege_x.dart';
 import 'package:flutter_gms_demo/core/models/privilege.dart';
 import 'package:flutter_gms_demo/core/models/user_account.dart';
 import 'package:flutter_gms_demo/core/models/user_role.dart';
+import 'package:flutter_gms_demo/features/audit_trail/providers/audit_log_notifier.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart' hide Form;
@@ -124,6 +125,17 @@ class _ApprovalDetailsDialog extends HookConsumerWidget {
             approvedByUserId: me.id,
           );
 
+      ref
+          .read(auditLogsProvider.notifier)
+          .log(
+            userAccountId: me.id,
+            userFullName: me.fullName,
+            action: 'Approve Request',
+            description:
+                '${me.fullName} approved ${req.displayId} '
+                '(${req.formType.label}) and created ${created.displayId}.',
+          );
+
       // Notify the teacher and every student.
       final List<String> recipients = req.participantIds
           .where((id) => id != me.id)
@@ -161,6 +173,17 @@ class _ApprovalDetailsDialog extends HookConsumerWidget {
             requestId: req.id,
             reason: reason,
             approvedByUserId: me.id,
+          );
+
+      ref
+          .read(auditLogsProvider.notifier)
+          .log(
+            userAccountId: me.id,
+            userFullName: me.fullName,
+            action: 'Disapprove Request',
+            description:
+                '${me.fullName} disapproved ${req.displayId} '
+                '(${req.formType.label}): $reason',
           );
 
       ref

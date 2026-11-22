@@ -1,4 +1,5 @@
 import 'package:flutter_gms_demo/core/models/user_account.dart';
+import 'package:flutter_gms_demo/features/audit_trail/providers/audit_log_notifier.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart' hide Form;
@@ -66,6 +67,7 @@ class _FillFormDialog extends HookConsumerWidget {
           canEditFields: canEditFields,
           canSign: canSign,
           meId: me?.id,
+          meFullName: me?.fullName,
         ),
       ),
     );
@@ -80,6 +82,7 @@ class _FormBody extends HookConsumerWidget {
     required this.canEditFields,
     required this.canSign,
     required this.meId,
+    required this.meFullName,
   });
 
   final Form form;
@@ -88,6 +91,7 @@ class _FormBody extends HookConsumerWidget {
   final bool canEditFields;
   final bool canSign;
   final String? meId;
+  final String? meFullName;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -148,6 +152,19 @@ class _FormBody extends HookConsumerWidget {
           .read(formsProvider.notifier)
           .mergeFields(formId: form.id, updates: localFields.value);
 
+      if (meId != null) {
+        ref
+            .read(auditLogsProvider.notifier)
+            .log(
+              userAccountId: meId!,
+              userFullName: meFullName,
+              action: 'Edit Form',
+              description:
+                  '${form.displayId}: ${signerRole?.label ?? 'participant'} '
+                  'updated fields.',
+            );
+      }
+
       // Re-read post-update to decide if completing.
       final Form updated = ref
           .read(formsProvider)
@@ -158,6 +175,16 @@ class _FormBody extends HookConsumerWidget {
             .where((p) => p != meId)
             .toList();
         if (notifyIds.isNotEmpty && meId != null) {
+          ref
+              .read(auditLogsProvider.notifier)
+              .log(
+                userAccountId: meId!,
+                userFullName: meFullName,
+                action: 'Complete Form',
+                description:
+                    '${updated.displayId} (${updated.formType.label}) was completed.',
+              );
+
           ref
               .read(appNotificationsProvider.notifier)
               .notifyMany(
@@ -180,6 +207,15 @@ class _FormBody extends HookConsumerWidget {
             formId: form.id,
             role: signerRole!,
             signatureDataUrl: stubSignatureDataUrl,
+          );
+
+      ref
+          .read(auditLogsProvider.notifier)
+          .log(
+            userAccountId: meId!,
+            userFullName: meFullName,
+            action: 'Sign Form',
+            description: '${form.displayId}: ${signerRole!.label} signed.',
           );
 
       final Form updated = ref

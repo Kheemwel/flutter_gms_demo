@@ -1,8 +1,5 @@
-import 'package:flutter_gms_demo/core/models/user_account.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-
 import 'package:flutter_gms_demo/core/models/audit_log.dart';
-import 'package:flutter_gms_demo/features/auth/providers/auth_notifier.dart';
 
 part 'audit_log_notifier.g.dart';
 
@@ -15,12 +12,12 @@ class AuditLogsNotifier extends _$AuditLogsNotifier {
     required String userAccountId,
     required String action,
     required String description,
+    String? userFullName,
   }) {
-    final UserAccount? me = ref.read(authProvider);
     final entry = AuditLog(
       id: 'audit-${DateTime.now().microsecondsSinceEpoch}',
       userAccountId: userAccountId,
-      userFullName: userAccountId == me?.id ? me?.fullName : null,
+      userFullName: userFullName,
       action: action,
       description: description,
       createdAt: DateTime.now(),

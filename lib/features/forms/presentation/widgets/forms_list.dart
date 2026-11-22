@@ -1,3 +1,6 @@
+import 'package:flutter_gms_demo/core/models/user_account.dart';
+import 'package:flutter_gms_demo/features/audit_trail/providers/audit_log_notifier.dart';
+import 'package:flutter_gms_demo/features/auth/providers/auth_notifier.dart';
 import 'package:flutter_gms_demo/features/forms/presentation/dialogs/fill_form_dialog.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart' hide Form;
@@ -87,5 +90,15 @@ class FormsList extends ConsumerWidget {
       destructive: true,
     );
     if (ok) await ref.read(formsProvider.notifier).delete(form.id);
+
+    final UserAccount? me = ref.read(authProvider);
+    ref
+        .read(auditLogsProvider.notifier)
+        .log(
+          userAccountId: me?.id ?? 'system',
+          userFullName: me?.fullName,
+          action: 'Delete Form',
+          description: '${me?.fullName ?? 'System'} deleted ${form.displayId}.',
+        );
   }
 }
