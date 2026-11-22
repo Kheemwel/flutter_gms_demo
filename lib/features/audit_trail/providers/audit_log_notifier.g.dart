@@ -41,7 +41,7 @@ final class AuditLogsNotifierProvider
   }
 }
 
-String _$auditLogsNotifierHash() => r'3b86b35a9b34319af6a3715672fb6543fda9b85b';
+String _$auditLogsNotifierHash() => r'b8c38a2a42492e92aa1964a04585f4f9d41f983d';
 
 abstract class _$AuditLogsNotifier extends $Notifier<List<AuditLog>> {
   List<AuditLog> build();

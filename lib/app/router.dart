@@ -10,6 +10,8 @@ import 'package:flutter_gms_demo/features/home/presentation/dashboard_page.dart'
 import 'package:flutter_gms_demo/features/lost_and_found/presentation/lost_and_found_page.dart';
 import 'package:flutter_gms_demo/features/notifications/presentation/notifications_page.dart';
 import 'package:flutter_gms_demo/features/offenses/presentation/offenses_page.dart';
+import 'package:flutter_gms_demo/features/profile/presentation/change_password_page.dart';
+import 'package:flutter_gms_demo/features/profile/presentation/profile_page.dart';
 import 'package:flutter_gms_demo/features/student_records/presentation/my_child_records_page.dart';
 import 'package:flutter_gms_demo/features/student_records/presentation/my_records_page.dart';
 import 'package:flutter_gms_demo/features/student_records/presentation/students_page.dart';
@@ -117,6 +119,11 @@ final Provider<GoRouter> routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/app/notifications',
             builder: (_, _) => const NotificationsPage(),
+          ),
+          GoRoute(path: '/app/profile', builder: (_, _) => const ProfilePage()),
+          GoRoute(
+            path: '/app/profile/change-password',
+            builder: (_, _) => const ChangePasswordPage(),
           ),
         ],
       ),

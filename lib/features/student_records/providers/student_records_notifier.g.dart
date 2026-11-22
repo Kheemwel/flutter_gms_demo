@@ -96,7 +96,7 @@ final class StudentInventoriesNotifierProvider
 }
 
 String _$studentInventoriesNotifierHash() =>
-    r'40933c006c8f07f1bbbf1c7dc2382e01fbd866d1';
+    r'09d586605211b0da0c03f8fb9ca8e7aca6f2a2b1';
 
 abstract class _$StudentInventoriesNotifier
     extends $Notifier<List<StudentIndividualInventory>> {
@@ -159,7 +159,7 @@ final class StudentAnecdotalsNotifierProvider
 }
 
 String _$studentAnecdotalsNotifierHash() =>
-    r'd5f57921c84fe7ccc129499f5630b0bdf62b1bca';
+    r'4d7d3cacd1e13e03f80a1874ec6316201a7ee67a';
 
 abstract class _$StudentAnecdotalsNotifier
     extends $Notifier<List<StudentAnecdotal>> {

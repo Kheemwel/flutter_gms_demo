@@ -284,25 +284,74 @@ class _TopBar extends ConsumerWidget {
             ),
           ),
           const SizedBox(width: 8),
-          CircleAvatar(
-            radius: 18,
-            backgroundColor: scheme.primaryContainer,
-            child: Text(
-              user.firstName.substring(0, 1).toUpperCase(),
-              style: TextStyle(
-                color: scheme.onPrimaryContainer,
-                fontWeight: FontWeight.w600,
+          PopupMenuButton<String>(
+            offset: const Offset(0, 44),
+            tooltip: 'Account',
+            onSelected: (value) {
+              if (value == 'profile') {
+                context.go('/app/profile');
+              } else if (value == 'password') {
+                context.go('/app/profile/change-password');
+              } else if (value == 'logout') {
+                ref.read(authProvider.notifier).logout();
+                context.go('/');
+              }
+            },
+            itemBuilder: (_) => const [
+              PopupMenuItem(
+                value: 'profile',
+                child: ListTile(
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(Icons.person_outline_rounded),
+                  title: Text('My profile'),
+                ),
               ),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(user.fullName, style: context.textTheme.labelLarge),
-              Text(user.email, style: context.textTheme.bodySmall),
+              PopupMenuItem(
+                value: 'password',
+                child: ListTile(
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(Icons.password_rounded),
+                  title: Text('Change password'),
+                ),
+              ),
+              PopupMenuDivider(),
+              PopupMenuItem(
+                value: 'logout',
+                child: ListTile(
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(Icons.logout_rounded),
+                  title: Text('Logout'),
+                ),
+              ),
             ],
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircleAvatar(
+                  radius: 18,
+                  backgroundColor: context.colorScheme.primaryContainer,
+                  child: Text(
+                    user.firstName.substring(0, 1).toUpperCase(),
+                    style: TextStyle(
+                      color: context.colorScheme.onPrimaryContainer,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(user.fullName, style: context.textTheme.labelLarge),
+                    Text(user.email, style: context.textTheme.bodySmall),
+                  ],
+                ),
+              ],
+            ),
           ),
         ],
       ),

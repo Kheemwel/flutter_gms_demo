@@ -44,6 +44,10 @@ class DashboardPage extends ConsumerWidget {
       actions: [RolePill(label: kind.label, icon: kind.icon)],
       child: ListView(
         children: [
+          if (me.mustChangePassword) ...[
+            _MustChangePasswordBanner(),
+            const SizedBox(height: 16),
+          ],
           const SizedBox(height: 4),
           _KpiStrip(me: me, kind: kind),
           const SizedBox(height: 16),
@@ -625,6 +629,42 @@ class _TwoColumn extends StatelessWidget {
           ],
         );
       },
+    );
+  }
+}
+
+class _MustChangePasswordBanner extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: context.colorScheme.errorContainer,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.warning_amber_rounded,
+            color: context.colorScheme.onErrorContainer,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              'You\'re using the temporary password. Change it to clear '
+              'this notice.',
+              style: context.textTheme.bodyMedium?.copyWith(
+                color: context.colorScheme.onErrorContainer,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          FilledButton.tonal(
+            onPressed: () => context.go('/app/profile/change-password'),
+            child: const Text('Change now'),
+          ),
+        ],
+      ),
     );
   }
 }
