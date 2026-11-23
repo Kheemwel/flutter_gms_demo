@@ -1,5 +1,7 @@
 import 'package:flutter_gms_demo/core/models/user_account.dart';
 import 'package:flutter_gms_demo/features/audit_trail/providers/audit_log_notifier.dart';
+import 'package:flutter_gms_demo/features/signatures/presentation/signature_pad_dialog.dart';
+import 'package:flutter_gms_demo/shared/widgets/signature_preview.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart' hide Form;
@@ -10,7 +12,6 @@ import 'package:flutter_gms_demo/features/auth/providers/auth_notifier.dart';
 import 'package:flutter_gms_demo/features/forms/providers/forms_notifier.dart';
 import 'package:flutter_gms_demo/features/forms/providers/forms_providers.dart';
 import 'package:flutter_gms_demo/features/notifications/providers/notifications_notifier.dart';
-import 'package:flutter_gms_demo/features/forms/presentation/widgets/signature_stub.dart';
 
 Future<void> showFillFormDialog(BuildContext context, {required Form form}) {
   return showDialog<void>(
@@ -171,10 +172,7 @@ class _FormBody extends HookConsumerWidget {
           .firstWhere((f) => f.id == form.id);
       if (updated.status == FormStatus.complete &&
           form.status != FormStatus.complete) {
-        final List<String> notifyIds = updated.participants
-            .where((p) => p != meId)
-            .toList();
-        if (notifyIds.isNotEmpty && meId != null) {
+        if (meId != null) {
           ref
               .read(auditLogsProvider.notifier)
               .log(
@@ -184,7 +182,12 @@ class _FormBody extends HookConsumerWidget {
                 description:
                     '${updated.displayId} (${updated.formType.label}) was completed.',
               );
+        }
 
+        final List<String> notifyIds = updated.participants
+            .where((p) => p != meId)
+            .toList();
+        if (notifyIds.isNotEmpty && meId != null) {
           ref
               .read(appNotificationsProvider.notifier)
               .notifyMany(
@@ -201,28 +204,52 @@ class _FormBody extends HookConsumerWidget {
 
     Future<void> sign() async {
       if (signerRole == null || meId == null) return;
+
+      final String? dataUrl = await showSignatureDialog(context);
+      if (dataUrl == null || !context.mounted) return;
+
       await ref
           .read(formsProvider.notifier)
           .setSignature(
             formId: form.id,
             role: signerRole!,
-            signatureDataUrl: stubSignatureDataUrl,
+            signatureDataUrl: dataUrl,
           );
 
-      ref
-          .read(auditLogsProvider.notifier)
-          .log(
-            userAccountId: meId!,
-            userFullName: meFullName,
-            action: 'Sign Form',
-            description: '${form.displayId}: ${signerRole!.label} signed.',
-          );
+      if (meId != null) {
+        ref
+            .read(auditLogsProvider.notifier)
+            .log(
+              userAccountId: meId!,
+              userFullName: meFullName,
+              action: 'Sign Form',
+              description: '${form.displayId}: ${signerRole!.label} signed.',
+            );
+      }
 
       final Form updated = ref
           .read(formsProvider)
           .firstWhere((f) => f.id == form.id);
       if (updated.status == FormStatus.complete &&
           form.status != FormStatus.complete) {
+        ref
+            .read(auditLogsProvider.notifier)
+            .log(
+              userAccountId: meId!,
+              userFullName: meFullName,
+              action: 'Sign Form',
+              description: '${form.displayId}: ${signerRole!.label} signed.',
+            );
+        ref
+            .read(auditLogsProvider.notifier)
+            .log(
+              userAccountId: meId!,
+              userFullName: meFullName,
+              action: 'Complete Form',
+              description:
+                  '${updated.displayId} (${updated.formType.label}) was completed.',
+            );
+
         final List<String> notifyIds = updated.participants
             .where((p) => p != meId)
             .toList();
@@ -323,6 +350,7 @@ class _FormBody extends HookConsumerWidget {
                       child: _SignatureRow(
                         role: role,
                         signed: (currentSignatures[role] ?? '').isNotEmpty,
+                        signatureDataUrl: currentSignatures[role],
                         canSign:
                             canSign &&
                             signerRole == role &&
@@ -483,12 +511,14 @@ class _SignatureRow extends StatelessWidget {
   const _SignatureRow({
     required this.role,
     required this.signed,
+    required this.signatureDataUrl,
     required this.canSign,
     required this.onSign,
   });
 
   final SignerRole role;
   final bool signed;
+  final String? signatureDataUrl;
   final bool canSign;
   final VoidCallback onSign;
 
@@ -509,18 +539,18 @@ class _SignatureRow extends StatelessWidget {
             child: Text(role.label, style: context.textTheme.bodySmall),
           ),
           Expanded(
-            child: signed
+            child: signed && signatureDataUrl != null
                 ? Row(
                     children: [
-                      Icon(
-                        Icons.check_circle_rounded,
-                        size: 18,
-                        color: context.colorScheme.primary,
+                      SignaturePreview(
+                        dataUrl: signatureDataUrl!,
+                        width: 96,
+                        height: 36,
                       ),
-                      const SizedBox(width: 6),
+                      const SizedBox(width: 8),
                       Text(
                         'Signed',
-                        style: context.textTheme.bodyMedium?.copyWith(
+                        style: context.textTheme.bodySmall?.copyWith(
                           color: context.colorScheme.primary,
                           fontWeight: FontWeight.w600,
                         ),

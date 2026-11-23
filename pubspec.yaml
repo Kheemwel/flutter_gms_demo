@@ -24,6 +24,7 @@ dependencies:
 
   # Utils
   intl: ^0.20.3
+  signature: ^6.4.0
 
 
 dev_dependencies:

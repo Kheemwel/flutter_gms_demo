@@ -1,6 +1,8 @@
 import 'package:flutter_gms_demo/core/models/user_account.dart';
+import 'package:flutter_gms_demo/features/signatures/presentation/signature_pad_dialog.dart';
 import 'package:flutter_gms_demo/features/student_records/presentation/dialogs/write_anecdotal_dialog.dart';
 import 'package:flutter_gms_demo/features/user_accounts/providers/user_accounts_providers.dart';
+import 'package:flutter_gms_demo/shared/widgets/signature_preview.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -9,7 +11,6 @@ import 'package:flutter_gms_demo/core/extensions/theme_x.dart';
 import 'package:flutter_gms_demo/core/models/privilege.dart';
 import 'package:flutter_gms_demo/core/models/student_records.dart';
 import 'package:flutter_gms_demo/features/auth/providers/auth_notifier.dart';
-import 'package:flutter_gms_demo/features/forms/presentation/widgets/signature_stub.dart';
 import 'package:flutter_gms_demo/features/student_records/providers/student_records_notifier.dart';
 import 'package:flutter_gms_demo/shared/widgets/app_confirm_dialog.dart';
 import 'package:flutter_gms_demo/shared/widgets/app_empty_state.dart';
@@ -60,20 +61,32 @@ class AnecdotalListView extends ConsumerWidget {
                 isAuthor: me?.id == entry.authorUserId,
                 onDelete: () => canWrite ? _delete(context, ref, entry) : null,
                 onSignAsStudent: viewerRole == AnecdotalViewerRole.student
-                    ? () => ref
-                          .read(studentAnecdotalsProvider.notifier)
-                          .setStudentSignature(
-                            anecdotalId: entry.id,
-                            dataUrl: stubSignatureDataUrl,
-                          )
+                    ? () async {
+                        final String? dataUrl = await showSignatureDialog(
+                          context,
+                        );
+                        if (dataUrl == null || !context.mounted) return;
+                        await ref
+                            .read(studentAnecdotalsProvider.notifier)
+                            .setStudentSignature(
+                              anecdotalId: entry.id,
+                              dataUrl: dataUrl,
+                            );
+                      }
                     : null,
                 onSignAsParent: viewerRole == AnecdotalViewerRole.parent
-                    ? () => ref
-                          .read(studentAnecdotalsProvider.notifier)
-                          .setParentSignature(
-                            anecdotalId: entry.id,
-                            dataUrl: stubSignatureDataUrl,
-                          )
+                    ? () async {
+                        final String? dataUrl = await showSignatureDialog(
+                          context,
+                        );
+                        if (dataUrl == null || !context.mounted) return;
+                        await ref
+                            .read(studentAnecdotalsProvider.notifier)
+                            .setParentSignature(
+                              anecdotalId: entry.id,
+                              dataUrl: dataUrl,
+                            );
+                      }
                     : null,
               );
             },
@@ -184,11 +197,23 @@ class _AnecdotalCard extends StatelessWidget {
                     style: context.textTheme.bodySmall,
                   ),
                 ),
-                _SignChip(label: 'Author', signed: entry.authorSigned),
+                _SignChip(
+                  label: 'Author',
+                  signed: entry.authorSigned,
+                  signatureDataUrl: entry.authorSignatureDataUrl,
+                ),
                 const SizedBox(width: 6),
-                _SignChip(label: 'Student', signed: entry.studentSigned),
+                _SignChip(
+                  label: 'Student',
+                  signed: entry.studentSigned,
+                  signatureDataUrl: entry.studentSignatureDataUrl,
+                ),
                 const SizedBox(width: 6),
-                _SignChip(label: 'Parent', signed: entry.parentSigned),
+                _SignChip(
+                  label: 'Parent',
+                  signed: entry.parentSigned,
+                  signatureDataUrl: entry.parentSignatureDataUrl,
+                ),
               ],
             ),
             if (onSignAsStudent != null && !entry.studentSigned) ...[
@@ -228,9 +253,14 @@ class _AnecdotalCard extends StatelessWidget {
 }
 
 class _SignChip extends StatelessWidget {
-  const _SignChip({required this.label, required this.signed});
+  const _SignChip({
+    required this.label,
+    required this.signed,
+    this.signatureDataUrl,
+  });
   final String label;
   final bool signed;
+  final String? signatureDataUrl;
 
   @override
   Widget build(BuildContext context) {
@@ -242,7 +272,12 @@ class _SignChip extends StatelessWidget {
         ? scheme.onPrimaryContainer
         : scheme.onSurfaceVariant;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: EdgeInsets.only(
+        left: signed && signatureDataUrl != null ? 2 : 8,
+        right: 8,
+        top: 2,
+        bottom: 2,
+      ),
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(20),
@@ -250,11 +285,14 @@ class _SignChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            signed ? Icons.check_rounded : Icons.schedule_rounded,
-            size: 12,
-            color: fg,
-          ),
+          if (signed && signatureDataUrl != null)
+            SignaturePreview(dataUrl: signatureDataUrl!, width: 36, height: 20)
+          else
+            Icon(
+              signed ? Icons.check_rounded : Icons.schedule_rounded,
+              size: 12,
+              color: fg,
+            ),
           const SizedBox(width: 4),
           Text(label, style: context.textTheme.labelSmall?.copyWith(color: fg)),
         ],

@@ -1,3 +1,5 @@
+import 'package:flutter_gms_demo/features/signatures/presentation/signature_pad_dialog.dart';
+import 'package:flutter_gms_demo/shared/widgets/signature_preview.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
@@ -7,7 +9,6 @@ import 'package:flutter_gms_demo/core/models/student_records.dart';
 import 'package:flutter_gms_demo/core/models/user_account.dart';
 import 'package:flutter_gms_demo/core/models/user_profile.dart';
 import 'package:flutter_gms_demo/features/auth/providers/auth_notifier.dart';
-import 'package:flutter_gms_demo/features/forms/presentation/widgets/signature_stub.dart';
 import 'package:flutter_gms_demo/features/notifications/providers/notifications_notifier.dart';
 import 'package:flutter_gms_demo/features/student_records/providers/student_records_notifier.dart';
 import 'package:flutter_gms_demo/features/user_accounts/providers/user_accounts_notifier.dart';
@@ -48,11 +49,15 @@ class _WriteAnecdotalDialog extends HookConsumerWidget {
     final ValueNotifier<Map<String, String>> errors =
         useState<Map<String, String>>(const {});
     final ValueNotifier<bool> submitting = useState(false);
+    final ValueNotifier<String?> authorSignature = useState<String?>(null);
 
     Future<void> submit() async {
       final e = <String, String>{};
       if (narrativeCtrl.text.trim().isEmpty) {
         e['narrative'] = 'Narrative is required.';
+      }
+      if (authorSignature.value == null) {
+        e['signature'] = 'You must sign this entry before saving.';
       }
       if (me == null) e['_auth'] = 'Not logged in.';
       if (e.isNotEmpty) {
@@ -70,7 +75,7 @@ class _WriteAnecdotalDialog extends HookConsumerWidget {
         observedAt: observedAt.value,
         category: category.value,
         narrative: narrativeCtrl.text.trim(),
-        authorSignatureDataUrl: stubSignatureDataUrl,
+        authorSignatureDataUrl: authorSignature.value,
       );
 
       await ref.read(studentAnecdotalsProvider.notifier).add(entry);
@@ -197,6 +202,85 @@ class _WriteAnecdotalDialog extends HookConsumerWidget {
                             'and what action did you take?',
                         alignLabelWithHint: true,
                         errorText: errors.value['narrative'],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    InputDecorator(
+                      decoration: InputDecoration(
+                        errorText: errors.value['signature'],
+                        contentPadding: EdgeInsets.zero,
+                        border: InputBorder.none,
+                      ),
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: context.colorScheme.surfaceContainerHighest
+                              .withValues(alpha: 0.3),
+                          borderRadius: BorderRadius.circular(8),
+                          border: errors.value['signature'] != null
+                              ? Border.all(color: context.colorScheme.error)
+                              : null,
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Author signature',
+                                    style: context.textTheme.titleSmall,
+                                  ),
+                                  Text(
+                                    authorSignature.value == null
+                                        ? 'Not signed yet.'
+                                        : 'Signed.',
+                                    style: context.textTheme.bodySmall,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            if (authorSignature.value == null)
+                              FilledButton.tonalIcon(
+                                onPressed: () async {
+                                  final String? dataUrl =
+                                      await showSignatureDialog(context);
+                                  if (dataUrl != null) {
+                                    authorSignature.value = dataUrl;
+                                    // Clear the signature error if it was set.
+                                    if (errors.value['signature'] != null) {
+                                      final Map<String, String> next = {
+                                        ...errors.value,
+                                      }..remove('signature');
+                                      errors.value = next;
+                                    }
+                                  }
+                                },
+                                icon: const Icon(Icons.draw_rounded, size: 18),
+                                label: const Text('Sign'),
+                              )
+                            else
+                              Row(
+                                children: [
+                                  SignaturePreview(
+                                    dataUrl: authorSignature.value!,
+                                    width: 96,
+                                    height: 36,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  TextButton.icon(
+                                    onPressed: () =>
+                                        authorSignature.value = null,
+                                    icon: const Icon(
+                                      Icons.close_rounded,
+                                      size: 16,
+                                    ),
+                                    label: const Text('Clear'),
+                                  ),
+                                ],
+                              ),
+                          ],
+                        ),
                       ),
                     ),
                   ],
