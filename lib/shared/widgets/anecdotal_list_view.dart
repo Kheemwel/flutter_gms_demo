@@ -37,9 +37,12 @@ class AnecdotalListView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final UserAccount? me = ref.watch(authProvider);
-    final List<StudentAnecdotal> entries = ref
-        .watch(studentAnecdotalsProvider.notifier)
-        .forStudent(studentId);
+    final List<StudentAnecdotal> entries =
+        ref
+            .watch(studentAnecdotalsProvider)
+            .where((a) => a.studentId == studentId)
+            .toList(growable: false)
+          ..sort((a, b) => b.observedAt.compareTo(a.observedAt));
     final bool canWrite = ref.can(Privilege.writeStudentsAnecdotal);
     final UserAccount? student = ref.watch(userByIdProvider(studentId));
 

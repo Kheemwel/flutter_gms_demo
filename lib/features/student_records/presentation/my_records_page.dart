@@ -1,11 +1,11 @@
 import 'package:flutter_gms_demo/core/models/student_records.dart';
 import 'package:flutter_gms_demo/core/models/user_account.dart';
+import 'package:flutter_gms_demo/features/student_records/providers/student_records_notifier.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 
 import 'package:flutter_gms_demo/core/models/user_profile.dart';
 import 'package:flutter_gms_demo/features/auth/providers/auth_notifier.dart';
-import 'package:flutter_gms_demo/features/student_records/providers/student_records_providers.dart';
 import 'package:flutter_gms_demo/shared/widgets/anecdotal_list_view.dart';
 import 'package:flutter_gms_demo/shared/widgets/app_empty_state.dart';
 import 'package:flutter_gms_demo/shared/widgets/app_page_scaffold.dart';
@@ -26,7 +26,10 @@ class MyRecordsPage extends ConsumerWidget {
       );
     }
     final profile = me.profile as StudentProfile;
-    final StudentIndividualInventory? inventory = ref.watch(myInventoryProvider);
+    final StudentIndividualInventory? inventory = ref
+        .watch(studentInventoriesProvider)
+        .where((inv) => inv.studentId == me.id)
+        .firstOrNull;
 
     return AppPageScaffold(
       title: 'My Records',

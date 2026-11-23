@@ -29,8 +29,9 @@ class StudentDetailDialog extends ConsumerWidget {
     }
     final profile = student.profile as StudentProfile;
     final StudentIndividualInventory? inventory = ref
-        .watch(studentInventoriesProvider.notifier)
-        .forStudent(studentId);
+        .watch(studentInventoriesProvider)
+        .where((inv) => inv.studentId == studentId)
+        .firstOrNull;
 
     return Dialog(
       child: ConstrainedBox(

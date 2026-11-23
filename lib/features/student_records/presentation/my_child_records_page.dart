@@ -37,8 +37,9 @@ class MyChildRecordsPage extends ConsumerWidget {
     );
     final profile = selected.profile as StudentProfile;
     final StudentIndividualInventory? inventory = ref
-        .watch(studentInventoriesProvider.notifier)
-        .forStudent(selected.id);
+        .watch(studentInventoriesProvider)
+        .where((inv) => inv.studentId == selected.id)
+        .firstOrNull;
 
     return AppPageScaffold(
       title: 'My Child Records',

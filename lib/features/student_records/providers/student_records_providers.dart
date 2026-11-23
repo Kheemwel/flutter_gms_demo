@@ -1,11 +1,9 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import 'package:flutter_gms_demo/core/models/grade_level.dart';
-import 'package:flutter_gms_demo/core/models/student_records.dart';
 import 'package:flutter_gms_demo/core/models/user_account.dart';
 import 'package:flutter_gms_demo/core/models/user_profile.dart';
 import 'package:flutter_gms_demo/features/auth/providers/auth_notifier.dart';
-import 'package:flutter_gms_demo/features/student_records/providers/student_records_notifier.dart';
 import 'package:flutter_gms_demo/features/user_accounts/providers/user_accounts_notifier.dart';
 import 'package:hooks_riverpod/legacy.dart';
 
@@ -47,22 +45,6 @@ final Provider<List<UserAccount>> filteredStudentsProvider =
                     (s.profile as StudentProfile).lrn.contains(q));
           })
           .toList(growable: false);
-    });
-
-/// The signed-in student's inventory, if they are a student.
-final Provider<StudentIndividualInventory?> myInventoryProvider =
-    Provider<StudentIndividualInventory?>((ref) {
-      final UserAccount? me = ref.watch(authProvider);
-      if (me == null || me.profile is! StudentProfile) return null;
-      return ref.watch(studentInventoriesProvider.notifier).forStudent(me.id);
-    });
-
-/// The signed-in student's anecdotal entries.
-final Provider<List<StudentAnecdotal>> myAnecdotalsProvider =
-    Provider<List<StudentAnecdotal>>((ref) {
-      final UserAccount? me = ref.watch(authProvider);
-      if (me == null || me.profile is! StudentProfile) return const [];
-      return ref.watch(studentAnecdotalsProvider.notifier).forStudent(me.id);
     });
 
 /// Child user accounts for the signed-in parent.
