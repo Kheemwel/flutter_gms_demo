@@ -23,6 +23,7 @@ final List<Role> seedRoles = [
       Privilege.viewStudentSummary,
       Privilege.viewStudentsAnecdotal,
       Privilege.writeStudentsAnecdotal,
+      Privilege.manageStudentInventory,
       Privilege.studentPrivileges,
       Privilege.manageExpiredItems,
       Privilege.manageClaimedItems,

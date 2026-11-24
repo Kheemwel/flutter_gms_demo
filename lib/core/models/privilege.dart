@@ -27,6 +27,7 @@ enum Privilege {
   viewStudentSummary,
   viewStudentsAnecdotal,
   writeStudentsAnecdotal,
+  manageStudentInventory,
   studentPrivileges,
   parentPrivileges,
 
@@ -53,7 +54,8 @@ enum Privilege {
     manageRoles => PrivilegeGroup.roles,
     viewStudentSummary ||
     viewStudentsAnecdotal ||
-    writeStudentsAnecdotal => PrivilegeGroup.studentRecords,
+    writeStudentsAnecdotal ||
+    manageStudentInventory => PrivilegeGroup.studentRecords,
     studentPrivileges || parentPrivileges => PrivilegeGroup.portal,
     admin => PrivilegeGroup.system,
   };
@@ -79,6 +81,7 @@ enum Privilege {
     viewStudentSummary => 'View student summary',
     viewStudentsAnecdotal => 'View student anecdotal',
     writeStudentsAnecdotal => 'Write student anecdotal',
+    manageStudentInventory => 'Manage student inventory',
     studentPrivileges => 'Student portal access',
     parentPrivileges => 'Parent portal access',
     admin => 'System administrator',
