@@ -33,9 +33,24 @@ class _NewRequestDialog extends HookConsumerWidget {
     final List<UserAccount> users = ref.watch(userAccountsProvider);
     final UserAccount? me = ref.watch(authProvider);
 
-    final List<UserAccount> students = users
+    final List<UserAccount> allStudents = users
         .where((u) => u.profile is StudentProfile && !u.isArchived)
         .toList(growable: false);
+
+    final List<UserAccount> studentsWithParent = allStudents
+        .where(
+          (s) => users.any(
+            (u) =>
+                !u.isArchived &&
+                u.profile is ParentProfile &&
+                (u.profile as ParentProfile).childIds.contains(s.id),
+          ),
+        )
+        .toList(growable: false);
+
+    final List<UserAccount> students = type == FormType.homeVisitation
+        ? studentsWithParent
+        : allStudents;
 
     final ValueNotifier<Set<String>> studentIds = useState<Set<String>>(
       <String>{},
@@ -65,6 +80,24 @@ class _NewRequestDialog extends HookConsumerWidget {
       final List<UserAccount> chosen = students
           .where((s) => studentIds.value.contains(s.id))
           .toList();
+
+      if (type == FormType.homeVisitation) {
+        final UserAccount chosenStudent = chosen.single;
+        final bool hasParent = users.any(
+          (u) =>
+              !u.isArchived &&
+              u.profile is ParentProfile &&
+              (u.profile as ParentProfile).childIds.contains(chosenStudent.id),
+        );
+        if (!hasParent) {
+          errors.value = {
+            'students':
+                'This student has no linked parent. A home visitation request '
+                'cannot be submitted until a parent is linked.',
+          };
+          return;
+        }
+      }
 
       final request = FormRequest(
         id: '${DateTime.now().millisecondsSinceEpoch}',
@@ -167,6 +200,21 @@ class _NewRequestDialog extends HookConsumerWidget {
                           : 'Student',
                       style: context.textTheme.titleSmall,
                     ),
+                    const SizedBox(height: 8),
+                    if (students.isEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Text(
+                          type == FormType.homeVisitation
+                              ? 'No students with a linked parent. Link a parent to a '
+                                    'student from Students → (student) → Parents, or via '
+                                    'User Accounts → add parent.'
+                              : 'No students available.',
+                          style: context.textTheme.bodySmall?.copyWith(
+                            color: context.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
                     const SizedBox(height: 8),
                     Container(
                       decoration: BoxDecoration(

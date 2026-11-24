@@ -79,21 +79,49 @@ class _ApprovalDetailsDialog extends HookConsumerWidget {
           final UserAccount student = users.firstWhere(
             (u) => u.id == p.studentId,
           );
-          final UserAccount parent = users.firstWhere(
-            (u) => u.profile is ParentProfile,
-          );
-          final UserAccount jrPrincipal = users.firstWhere(
-            (u) =>
-                u.profile is PrincipalProfile &&
-                (u.profile as PrincipalProfile).position ==
-                    PrincipalPosition.juniorHigh,
-          );
-          final UserAccount srPrincipal = users.firstWhere(
-            (u) =>
-                u.profile is PrincipalProfile &&
-                (u.profile as PrincipalProfile).position ==
-                    PrincipalPosition.seniorHigh,
-          );
+          final UserAccount? parent = _findParentForStudent(users, student.id);
+          if (parent == null) {
+            // Bail out before doing anything destructive.
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    'Cannot approve: student ${student.fullName} has no linked '
+                    'parent. Link one first.',
+                  ),
+                ),
+              );
+              busy.value = false;
+            }
+            return;
+          }
+          UserAccount? jrPrincipal;
+          UserAccount? srPrincipal;
+          for (final u in users) {
+            if (u.isArchived) continue;
+            final UserProfile p = u.profile;
+            if (p is PrincipalProfile &&
+                p.position == PrincipalPosition.juniorHigh) {
+              jrPrincipal = u;
+            } else if (p is PrincipalProfile &&
+                p.position == PrincipalPosition.seniorHigh) {
+              srPrincipal = u;
+            }
+          }
+          if (jrPrincipal == null || srPrincipal == null) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text(
+                    'Cannot approve: the school has no active Junior/Senior High '
+                    'School Principal.',
+                  ),
+                ),
+              );
+              busy.value = false;
+            }
+            return;
+          }
 
           final StudentIndividualInventory? inventory = ref
               .read(studentInventoriesProvider)
@@ -403,6 +431,18 @@ class _ApprovalDetailsDialog extends HookConsumerWidget {
         ),
       ),
     );
+  }
+
+  UserAccount? _findParentForStudent(
+    List<UserAccount> users,
+    String studentId,
+  ) {
+    for (final u in users) {
+      if (u.isArchived) continue;
+      final UserProfile p = u.profile;
+      if (p is ParentProfile && p.childIds.contains(studentId)) return u;
+    }
+    return null;
   }
 }
 

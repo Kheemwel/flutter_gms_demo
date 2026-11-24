@@ -39,9 +39,28 @@ class _CreateFormDialog extends HookConsumerWidget {
     final List<UserAccount> teachers = users
         .where((u) => u.profile is TeacherProfile && !u.isArchived)
         .toList(growable: false);
-    final List<UserAccount> students = users
+    final List<UserAccount> allStudents = users
         .where((u) => u.profile is StudentProfile && !u.isArchived)
         .toList(growable: false);
+
+    // Home visitation requires a linked parent — a form without one can
+    // never complete because the parent is a required signer.
+    final List<UserAccount> studentsWithParent = allStudents
+        .where(
+          (s) => users.any(
+            (u) =>
+                !u.isArchived &&
+                u.profile is ParentProfile &&
+                (u.profile as ParentProfile).childIds.contains(s.id),
+          ),
+        )
+        .toList(growable: false);
+
+    // For home visitation only students with a parent qualify. For
+    // violations any student does (parent isn't a participant).
+    final List<UserAccount> students = type == FormType.homeVisitation
+        ? studentsWithParent
+        : allStudents;
 
     final ValueNotifier<String?> teacherId = useState<String?>(
       teachers.isNotEmpty ? teachers.first.id : null,
@@ -87,6 +106,45 @@ class _CreateFormDialog extends HookConsumerWidget {
             .firstOrNull;
       }
 
+      // Guard against state that would otherwise throw during the build.
+      // Prefer to surface the problem as a validation error so the user
+      // sees it in the dialog, not as a crash.
+      UserAccount? parent;
+      UserAccount? juniorPrincipal;
+      UserAccount? seniorPrincipal;
+      if (type == FormType.homeVisitation) {
+        final String studentId = chosenStudents.single.id;
+        parent = _findParentUserOrNull(studentId, users);
+        juniorPrincipal = _findPrincipalOrNull(
+          users,
+          PrincipalPosition.juniorHigh,
+        );
+        seniorPrincipal = _findPrincipalOrNull(
+          users,
+          PrincipalPosition.seniorHigh,
+        );
+
+        if (parent == null) {
+          errors.value = {
+            'students':
+                'This student has no linked parent. Link a parent before '
+                'creating a home visitation form.',
+          };
+          return;
+        }
+        if (juniorPrincipal == null || seniorPrincipal == null) {
+          errors.value = {
+            'students':
+                'The school has no Junior/Senior High School Principal. '
+                'Ask an admin to create them before home visitation forms '
+                'can be issued.',
+          };
+          return;
+        }
+      }
+
+      errors.value = const {};
+
       final Form form = type == FormType.violation
           ? buildViolationForm(
               formId: id,
@@ -101,15 +159,9 @@ class _CreateFormDialog extends HookConsumerWidget {
               createdBy: me!,
               teacher: teacher,
               student: chosenStudents.single,
-              parent: _findParentUser(chosenStudents.single.id, ref),
-              juniorPrincipal: _findPrincipal(
-                ref,
-                PrincipalPosition.juniorHigh,
-              ),
-              seniorPrincipal: _findPrincipal(
-                ref,
-                PrincipalPosition.seniorHigh,
-              ),
+              parent: parent!,
+              juniorPrincipal: juniorPrincipal!,
+              seniorPrincipal: seniorPrincipal!,
               inventory: inventory,
             );
 
@@ -197,6 +249,21 @@ class _CreateFormDialog extends HookConsumerWidget {
                           : 'Student',
                       style: context.textTheme.titleSmall,
                     ),
+                    const SizedBox(height: 8),
+                    if (students.isEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Text(
+                          type == FormType.homeVisitation
+                              ? 'No students with a linked parent. Link a parent to a '
+                                    'student from Students → (student) → Parents, or via '
+                                    'User Accounts → add parent.'
+                              : 'No students available.',
+                          style: context.textTheme.bodySmall?.copyWith(
+                            color: context.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
                     const SizedBox(height: 8),
                     Container(
                       decoration: BoxDecoration(
@@ -293,24 +360,27 @@ class _CreateFormDialog extends HookConsumerWidget {
     );
   }
 
-  UserAccount _findParentUser(String studentId, WidgetRef ref) {
-    final List<UserAccount> users = ref.read(userAccountsProvider);
-    return users.firstWhere(
-      (u) =>
-          u.profile is ParentProfile &&
-          (u.profile as ParentProfile).childIds.contains(studentId),
-      orElse: () => throw StateError(
-        'No parent exists for student $studentId. Create one first.',
-      ),
-    );
+  UserAccount? _findParentUserOrNull(
+    String studentId,
+    List<UserAccount> users,
+  ) {
+    for (final u in users) {
+      if (u.isArchived) continue;
+      final UserProfile p = u.profile;
+      if (p is ParentProfile && p.childIds.contains(studentId)) return u;
+    }
+    return null;
   }
 
-  UserAccount _findPrincipal(WidgetRef ref, PrincipalPosition pos) {
-    final List<UserAccount> users = ref.read(userAccountsProvider);
-    return users.firstWhere(
-      (u) =>
-          u.profile is PrincipalProfile &&
-          (u.profile as PrincipalProfile).position == pos,
-    );
+  UserAccount? _findPrincipalOrNull(
+    List<UserAccount> users,
+    PrincipalPosition pos,
+  ) {
+    for (final u in users) {
+      if (u.isArchived) continue;
+      final UserProfile p = u.profile;
+      if (p is PrincipalProfile && p.position == pos) return u;
+    }
+    return null;
   }
 }
