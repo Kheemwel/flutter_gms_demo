@@ -179,24 +179,32 @@ class _NewRequestDialog extends HookConsumerWidget {
                       child: ListView(
                         shrinkWrap: true,
                         children: [
-                          for (final s in students)
-                            if (type == FormType.homeVisitation)
-                              RadioListTile<String>(
-                                dense: true,
-                                groupValue: studentIds.value.isEmpty
-                                    ? null
-                                    : studentIds.value.first,
-                                value: s.id,
-                                title: Text(s.fullName),
-                                subtitle: Text(s.email),
-                                controlAffinity:
-                                    ListTileControlAffinity.leading,
-                                onChanged: (v) {
-                                  if (v == null) return;
-                                  studentIds.value = {v};
-                                },
-                              )
-                            else
+                          if (type == FormType.homeVisitation) ...[
+                            RadioGroup<String>(
+                              groupValue: studentIds.value.isEmpty
+                                  ? null
+                                  : studentIds.value.first,
+                              onChanged: (v) {
+                                if (v == null) return;
+                                studentIds.value = {v};
+                              },
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  for (final s in students)
+                                    RadioListTile<String>(
+                                      dense: true,
+                                      value: s.id,
+                                      title: Text(s.fullName),
+                                      subtitle: Text(s.email),
+                                      controlAffinity:
+                                          ListTileControlAffinity.leading,
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ] else ...[
+                            for (final s in students)
                               CheckboxListTile(
                                 dense: true,
                                 title: Text(s.fullName),
@@ -216,6 +224,7 @@ class _NewRequestDialog extends HookConsumerWidget {
                                   studentIds.value = next;
                                 },
                               ),
+                          ],
                         ],
                       ),
                     ),

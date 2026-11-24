@@ -209,34 +209,53 @@ class _CreateFormDialog extends HookConsumerWidget {
                       child: ListView(
                         shrinkWrap: true,
                         children: [
-                          for (final s in students)
-                            CheckboxListTile(
-                              dense: true,
-                              title: Text(s.fullName),
-                              subtitle: Text(s.email),
-                              value: studentIds.value.contains(s.id),
-                              controlAffinity: ListTileControlAffinity.leading,
+                          if (type == FormType.homeVisitation) ...[
+                            RadioGroup<String>(
+                              groupValue: studentIds.value.isEmpty
+                                  ? null
+                                  : studentIds.value.first,
                               onChanged: (v) {
-                                final next = Set<String>.from(studentIds.value);
-                                if (type == FormType.homeVisitation) {
-                                  // Single-select
-                                  if (v ?? false) {
-                                    next
-                                      ..clear()
-                                      ..add(s.id);
-                                  } else {
-                                    next.remove(s.id);
-                                  }
-                                } else {
+                                if (v == null) return;
+                                studentIds.value = {v};
+                              },
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  for (final s in students)
+                                    RadioListTile<String>(
+                                      dense: true,
+                                      value: s.id,
+                                      title: Text(s.fullName),
+                                      subtitle: Text(s.email),
+                                      controlAffinity:
+                                          ListTileControlAffinity.leading,
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ] else ...[
+                            // Multi-select: checkboxes stay the same
+                            for (final s in students)
+                              CheckboxListTile(
+                                dense: true,
+                                title: Text(s.fullName),
+                                subtitle: Text(s.email),
+                                value: studentIds.value.contains(s.id),
+                                controlAffinity:
+                                    ListTileControlAffinity.leading,
+                                onChanged: (v) {
+                                  final next = Set<String>.from(
+                                    studentIds.value,
+                                  );
                                   if (v ?? false) {
                                     next.add(s.id);
                                   } else {
                                     next.remove(s.id);
                                   }
-                                }
-                                studentIds.value = next;
-                              },
-                            ),
+                                  studentIds.value = next;
+                                },
+                              ),
+                          ],
                         ],
                       ),
                     ),
