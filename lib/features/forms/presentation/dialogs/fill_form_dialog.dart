@@ -237,14 +237,6 @@ class _FormBody extends HookConsumerWidget {
             .log(
               userAccountId: meId!,
               userFullName: meFullName,
-              action: 'Sign Form',
-              description: '${form.displayId}: ${signerRole!.label} signed.',
-            );
-        ref
-            .read(auditLogsProvider.notifier)
-            .log(
-              userAccountId: meId!,
-              userFullName: meFullName,
               action: 'Complete Form',
               description:
                   '${updated.displayId} (${updated.formType.label}) was completed.',
