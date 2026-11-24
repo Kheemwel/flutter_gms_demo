@@ -1,8 +1,10 @@
 import 'package:flutter_gms_demo/core/extensions/privilege_x.dart';
 import 'package:flutter_gms_demo/core/models/privilege.dart';
+import 'package:flutter_gms_demo/core/models/student_records.dart';
 import 'package:flutter_gms_demo/core/models/user_account.dart';
 import 'package:flutter_gms_demo/core/models/user_role.dart';
 import 'package:flutter_gms_demo/features/audit_trail/providers/audit_log_notifier.dart';
+import 'package:flutter_gms_demo/features/student_records/providers/student_records_notifier.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart' hide Form;
@@ -92,6 +94,12 @@ class _ApprovalDetailsDialog extends HookConsumerWidget {
                 (u.profile as PrincipalProfile).position ==
                     PrincipalPosition.seniorHigh,
           );
+
+          final StudentIndividualInventory? inventory = ref
+              .read(studentInventoriesProvider)
+              .where((inv) => inv.studentId == student.id)
+              .firstOrNull;
+
           created = buildHomeVisitationForm(
             formId: formId,
             now: DateTime.now(),
@@ -101,6 +109,7 @@ class _ApprovalDetailsDialog extends HookConsumerWidget {
             parent: parent,
             juniorPrincipal: jrPrincipal,
             seniorPrincipal: srPrincipal,
+            inventory: inventory,
           );
         case ViolationRequestPayload p:
           final List<UserAccount> students = users

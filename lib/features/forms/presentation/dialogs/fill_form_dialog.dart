@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_gms_demo/core/models/user_account.dart';
 import 'package:flutter_gms_demo/features/audit_trail/providers/audit_log_notifier.dart';
 import 'package:flutter_gms_demo/features/signatures/presentation/signature_pad_dialog.dart';
@@ -124,6 +125,7 @@ class _FormBody extends HookConsumerWidget {
           spec.key: TextEditingController(text: currentFields[spec.key] ?? ''),
       };
     }, [fieldSpecs]);
+
     useEffect(() {
       return () {
         for (final TextEditingController c in controllers.values) {
@@ -307,9 +309,11 @@ class _FormBody extends HookConsumerWidget {
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 12),
                     child: canEdit
-                        ? TextField(
-                            controller: controllers[spec.key],
-                            maxLines: spec.multiline ? 3 : 1,
+                        ? _FormFieldInput(
+                            spec: spec,
+                            value: localFields.value[spec.key] ?? '',
+                            errorText: errors.value[spec.key],
+                            controller: controllers[spec.key]!,
                             onChanged: (v) {
                               final Map<String, String> next = {
                                 ...localFields.value,
@@ -317,16 +321,12 @@ class _FormBody extends HookConsumerWidget {
                               next[spec.key] = v;
                               localFields.value = next;
                             },
-                            decoration: InputDecoration(
-                              labelText:
-                                  '${spec.label}${spec.required ? ' *' : ''}',
-                              errorText: errors.value[spec.key],
-                            ),
                           )
                         : _ReadOnlyField(
                             label: spec.label,
                             value: localFields.value[spec.key] ?? '',
                             required: spec.required,
+                            type: spec.type,
                           ),
                   );
                 }),
@@ -455,11 +455,13 @@ class _ReadOnlyField extends StatelessWidget {
     required this.label,
     required this.value,
     required this.required,
+    this.type = FormFieldType.text,
   });
 
   final String label;
   final String value;
   final bool required;
+  final FormFieldType type;
 
   @override
   Widget build(BuildContext context) {
@@ -495,6 +497,171 @@ class _ReadOnlyField extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _DateField extends StatelessWidget {
+  const _DateField({
+    required this.label,
+    required this.value,
+    required this.errorText,
+    required this.onChanged,
+  });
+
+  final String label;
+  final String value;
+  final String? errorText;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final DateTime? current = _parseDate(value);
+    final String display = current == null ? 'Pick a date' : _fmtDate(current);
+
+    return InkWell(
+      onTap: () async {
+        final DateTime? picked = await showDatePicker(
+          context: context,
+          initialDate: current ?? DateTime.now(),
+          firstDate: DateTime(2000),
+          lastDate: DateTime(2100),
+        );
+        if (picked != null) onChanged(_fmtDate(picked));
+      },
+      child: InputDecorator(
+        decoration: InputDecoration(
+          labelText: label,
+          prefixIcon: const Icon(Icons.event_rounded),
+          errorText: errorText,
+          suffixIcon: current == null
+              ? null
+              : IconButton(
+                  tooltip: 'Clear',
+                  icon: const Icon(Icons.clear_rounded, size: 18),
+                  onPressed: () => onChanged(''),
+                ),
+        ),
+        child: Text(
+          display,
+          style: current == null
+              ? context.textTheme.bodyMedium?.copyWith(
+                  color: context.colorScheme.onSurfaceVariant,
+                  fontStyle: FontStyle.italic,
+                )
+              : context.textTheme.bodyMedium,
+        ),
+      ),
+    );
+  }
+
+  DateTime? _parseDate(String v) {
+    if (v.isEmpty) return null;
+    return DateTime.tryParse(v);
+  }
+
+  String _fmtDate(DateTime d) =>
+      '${d.year}-${d.month.toString().padLeft(2, '0')}-'
+      '${d.day.toString().padLeft(2, '0')}';
+}
+
+class _TimeField extends StatelessWidget {
+  const _TimeField({
+    required this.label,
+    required this.value,
+    required this.errorText,
+    required this.onChanged,
+  });
+
+  final String label;
+  final String value;
+  final String? errorText;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final TimeOfDay? current = _parseTime(value);
+    final String display = current == null ? 'Pick a time' : _fmtTime(current);
+
+    return InkWell(
+      onTap: () async {
+        final TimeOfDay? picked = await showTimePicker(
+          context: context,
+          initialTime: current ?? TimeOfDay.now(),
+        );
+        if (picked != null) onChanged(_fmtTime(picked));
+      },
+      child: InputDecorator(
+        decoration: InputDecoration(
+          labelText: label,
+          prefixIcon: const Icon(Icons.schedule_rounded),
+          errorText: errorText,
+          suffixIcon: current == null
+              ? null
+              : IconButton(
+                  tooltip: 'Clear',
+                  icon: const Icon(Icons.clear_rounded, size: 18),
+                  onPressed: () => onChanged(''),
+                ),
+        ),
+        child: Text(
+          display,
+          style: current == null
+              ? context.textTheme.bodyMedium?.copyWith(
+                  color: context.colorScheme.onSurfaceVariant,
+                  fontStyle: FontStyle.italic,
+                )
+              : context.textTheme.bodyMedium,
+        ),
+      ),
+    );
+  }
+
+  TimeOfDay? _parseTime(String v) {
+    if (v.isEmpty) return null;
+    final List<String> parts = v.split(':');
+    if (parts.length != 2) return null;
+    final int? h = int.tryParse(parts[0]);
+    final int? m = int.tryParse(parts[1]);
+    if (h == null || m == null) return null;
+    return TimeOfDay(hour: h, minute: m);
+  }
+
+  String _fmtTime(TimeOfDay t) =>
+      '${t.hour.toString().padLeft(2, '0')}:'
+      '${t.minute.toString().padLeft(2, '0')}';
+}
+
+class _EnumerationField extends StatelessWidget {
+  const _EnumerationField({
+    required this.label,
+    required this.value,
+    required this.options,
+    required this.errorText,
+    required this.onChanged,
+  });
+
+  final String label;
+  final String value;
+  final List<String> options;
+  final String? errorText;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final bool hasCurrent = options.contains(value);
+    return DropdownButtonFormField<String>(
+      initialValue: hasCurrent ? value : null,
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: const Icon(Icons.list_rounded),
+        errorText: errorText,
+      ),
+      hint: const Text('Select…'),
+      items: [
+        for (final o in options) DropdownMenuItem(value: o, child: Text(o)),
+      ],
+      onChanged: (v) => onChanged(v ?? ''),
     );
   }
 }
@@ -566,4 +733,69 @@ class _SignatureRow extends StatelessWidget {
       ),
     );
   }
+}
+
+class _FormFieldInput extends StatelessWidget {
+  const _FormFieldInput({
+    required this.spec,
+    required this.value,
+    required this.errorText,
+    required this.controller,
+    required this.onChanged,
+  });
+
+  final FormFieldSpec spec;
+  final String value;
+  final String? errorText;
+  final TextEditingController controller;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return switch (spec.type) {
+      FormFieldType.text => TextField(
+        controller: controller,
+        decoration: InputDecoration(labelText: _label, errorText: errorText),
+        onChanged: onChanged,
+      ),
+      FormFieldType.longText => TextField(
+        controller: controller,
+        maxLines: 4,
+        decoration: InputDecoration(
+          labelText: _label,
+          alignLabelWithHint: true,
+          errorText: errorText,
+        ),
+        onChanged: onChanged,
+      ),
+      FormFieldType.int => TextField(
+        controller: controller,
+        keyboardType: TextInputType.number,
+        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+        decoration: InputDecoration(labelText: _label, errorText: errorText),
+        onChanged: onChanged,
+      ),
+      FormFieldType.date => _DateField(
+        label: _label,
+        value: value,
+        errorText: errorText,
+        onChanged: onChanged,
+      ),
+      FormFieldType.time => _TimeField(
+        label: _label,
+        value: value,
+        errorText: errorText,
+        onChanged: onChanged,
+      ),
+      FormFieldType.enumeration => _EnumerationField(
+        label: _label,
+        value: value,
+        options: spec.options,
+        errorText: errorText,
+        onChanged: onChanged,
+      ),
+    };
+  }
+
+  String get _label => '${spec.label}${spec.required ? ' *' : ''}';
 }

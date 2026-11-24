@@ -1,4 +1,5 @@
 import 'package:flutter_gms_demo/core/models/form.dart';
+import 'package:flutter_gms_demo/core/models/student_records.dart';
 import 'package:flutter_gms_demo/core/models/user_account.dart';
 import 'package:flutter_gms_demo/core/models/user_profile.dart';
 
@@ -15,6 +16,7 @@ Form buildHomeVisitationForm({
   required UserAccount parent,
   required UserAccount juniorPrincipal,
   required UserAccount seniorPrincipal,
+  StudentIndividualInventory? inventory,
 }) {
   final UserProfile profile = student.profile;
   if (profile is! StudentProfile) {
@@ -43,8 +45,25 @@ Form buildHomeVisitationForm({
       fields: {
         'student_surname': student.lastName,
         'student_firstname': student.firstName,
+        'student_middlename': inventory?.middleName ?? '',
         'lrn': profile.lrn,
         'level_section': '${profile.gradeLevel.label} Mars',
+        'address': inventory?.address ?? '',
+        'birthday': inventory?.birthday == null
+            ? ''
+            : '${inventory!.birthday!.year}-'
+                  '${inventory.birthday!.month.toString().padLeft(2, '0')}-'
+                  '${inventory.birthday!.day.toString().padLeft(2, '0')}',
+        'age': inventory?.birthday == null
+            ? ''
+            : '${DateTime.now().difference(inventory!.birthday!).inDays ~/ 365}',
+        'father_name': inventory?.fatherName ?? '',
+        'father_contact': inventory?.fatherContact ?? '',
+        'mother_name': inventory?.motherName ?? '',
+        'mother_contact': inventory?.motherContact ?? '',
+        'guardian_name': inventory?.guardianName ?? '',
+        'guardian_contact': inventory?.guardianContact ?? '',
+        'adviser': teacher.fullName,
       },
     ),
   );

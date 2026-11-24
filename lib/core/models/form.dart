@@ -41,6 +41,9 @@ enum FormType {
   };
 }
 
+/// The kind of input that should be used when editing this field.
+enum FormFieldType { text, longText, date, time, int, enumeration }
+
 /// A required-or-optional field on a form. The form data is stored as
 /// a `Map<String, String>` keyed by [key]; this list is the schema.
 class FormFieldSpec {
@@ -48,13 +51,20 @@ class FormFieldSpec {
     required this.key,
     required this.label,
     this.required = false,
-    this.multiline = false,
+    this.type = FormFieldType.text,
+    this.options = const <String>[],
   });
 
   final String key;
   final String label;
   final bool required;
-  final bool multiline;
+  final FormFieldType type;
+
+  /// Only used when [type] is [FormFieldType.enumeration].
+  final List<String> options;
+
+  /// Convenience: multiline is now a function of type.
+  bool get multiline => type == FormFieldType.longText;
 }
 
 /// Base for the two form-data variants.
@@ -140,6 +150,15 @@ abstract class Form with _$Form {
           'place',
           'reason',
           'remark',
+          'address',
+          'birthday',
+          'age',
+          'father_name',
+          'father_contact',
+          'mother_name',
+          'mother_contact',
+          'guardian_name',
+          'guardian_contact',
         },
         SignerRole.teacher => const {'adviser'},
         _ => const <String>{},
@@ -180,65 +199,88 @@ abstract class Form with _$Form {
 // Field schemas — the "which fields are required" data.
 
 const List<FormFieldSpec> homeVisitationFields = [
-  // Prefilled from student profile; not required to edit but stored.
+  // Prefilled from student profile; stored but not user-edited on this form.
   FormFieldSpec(key: 'student_surname', label: 'Student surname'),
   FormFieldSpec(key: 'student_firstname', label: 'Student first name'),
   FormFieldSpec(key: 'student_middlename', label: 'Student middle name'),
-  FormFieldSpec(key: 'student_no', label: 'Student number'),
   FormFieldSpec(key: 'lrn', label: 'LRN'),
   FormFieldSpec(key: 'level_section', label: 'Level & section'),
-  FormFieldSpec(key: 'address', label: 'Address'),
-  FormFieldSpec(key: 'birthday', label: 'Birthday'),
-  FormFieldSpec(key: 'age', label: 'Age'),
+  FormFieldSpec(key: 'address', label: 'Address', type: FormFieldType.longText),
+  FormFieldSpec(key: 'birthday', label: 'Birthday', type: FormFieldType.date),
+  FormFieldSpec(key: 'age', label: 'Age', type: FormFieldType.int),
   FormFieldSpec(key: 'father_name', label: "Father's name"),
   FormFieldSpec(key: 'father_contact', label: "Father's contact"),
   FormFieldSpec(key: 'mother_name', label: "Mother's name"),
   FormFieldSpec(key: 'mother_contact', label: "Mother's contact"),
   FormFieldSpec(key: 'guardian_name', label: "Guardian's name"),
   FormFieldSpec(key: 'guardian_contact', label: "Guardian's contact"),
+
   // Required fields for the guidance filling step:
   FormFieldSpec(
     key: 'visitation_date',
     label: 'Visitation date',
+    type: FormFieldType.date,
     required: true,
   ),
   FormFieldSpec(key: 'place', label: 'Place', required: true),
   FormFieldSpec(
     key: 'reason',
     label: 'Reason',
+    type: FormFieldType.longText,
     required: true,
-    multiline: true,
   ),
   FormFieldSpec(
     key: 'remark',
     label: 'Remark',
+    type: FormFieldType.longText,
     required: true,
-    multiline: true,
   ),
   FormFieldSpec(key: 'adviser', label: 'Adviser'),
 ];
 
 const List<FormFieldSpec> violationFields = [
-  FormFieldSpec(key: 'date', label: 'Date of incident', required: true),
-  FormFieldSpec(key: 'time', label: 'Time of incident', required: true),
-  FormFieldSpec(key: 'offense_type', label: 'Offense type', required: true),
+  FormFieldSpec(
+    key: 'date',
+    label: 'Date of incident',
+    type: FormFieldType.date,
+    required: true,
+  ),
+  FormFieldSpec(
+    key: 'time',
+    label: 'Time of incident',
+    type: FormFieldType.time,
+    required: true,
+  ),
+  FormFieldSpec(
+    key: 'offense_type',
+    label: 'Offense type',
+    type: FormFieldType.enumeration,
+    options: ['Physical', 'Verbal', 'Social', 'Others'],
+    required: true,
+  ),
   FormFieldSpec(
     key: 'narrative',
     label: 'Narrative',
+    type: FormFieldType.longText,
     required: true,
-    multiline: true,
   ),
   FormFieldSpec(
     key: 'action_taken',
     label: 'Action taken',
+    type: FormFieldType.longText,
     required: true,
-    multiline: true,
   ),
-  FormFieldSpec(key: 'case_status', label: 'Case status', required: true),
+  FormFieldSpec(
+    key: 'case_status',
+    label: 'Case status',
+    type: FormFieldType.enumeration,
+    options: ['Resolved', 'Unresolved', 'Pending'],
+    required: true,
+  ),
   FormFieldSpec(
     key: 'recommendation',
     label: 'Recommendation',
+    type: FormFieldType.longText,
     required: true,
-    multiline: true,
   ),
 ];

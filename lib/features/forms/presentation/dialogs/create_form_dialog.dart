@@ -1,7 +1,9 @@
+import 'package:flutter_gms_demo/core/models/student_records.dart';
 import 'package:flutter_gms_demo/core/models/user_account.dart';
 import 'package:flutter_gms_demo/core/models/user_role.dart';
 import 'package:flutter_gms_demo/features/audit_trail/providers/audit_log_notifier.dart';
 import 'package:flutter_gms_demo/features/forms/form_helpers.dart';
+import 'package:flutter_gms_demo/features/student_records/providers/student_records_notifier.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart' hide Form;
@@ -75,6 +77,16 @@ class _CreateFormDialog extends HookConsumerWidget {
       final id = '${DateTime.now().millisecondsSinceEpoch}';
       final now = DateTime.now();
 
+      // Read the inventory of the selected student (home visitation only).
+      StudentIndividualInventory? inventory;
+      if (type == FormType.homeVisitation) {
+        final String studentId = chosenStudents.single.id;
+        inventory = ref
+            .read(studentInventoriesProvider)
+            .where((inv) => inv.studentId == studentId)
+            .firstOrNull;
+      }
+
       final Form form = type == FormType.violation
           ? buildViolationForm(
               formId: id,
@@ -98,6 +110,7 @@ class _CreateFormDialog extends HookConsumerWidget {
                 ref,
                 PrincipalPosition.seniorHigh,
               ),
+              inventory: inventory,
             );
 
       await ref.read(formsProvider.notifier).add(form);
