@@ -19,6 +19,7 @@ abstract class UserFormState with _$UserFormState {
     // Student-only
     @Default('') String lrn,
     @Default(GradeLevel.grade9) GradeLevel gradeLevel,
+    @Default(<String>[]) List<String> parentIds,
 
     // Parent-only
     @Default(<String>[]) List<String> childIds,
@@ -49,6 +50,7 @@ abstract class UserFormState with _$UserFormState {
       gradeLevel: profile is StudentProfile
           ? profile.gradeLevel
           : GradeLevel.grade9,
+      parentIds: const <String>[],
       childIds: profile is ParentProfile ? profile.childIds : const <String>[],
       position: profile is PrincipalProfile
           ? profile.position

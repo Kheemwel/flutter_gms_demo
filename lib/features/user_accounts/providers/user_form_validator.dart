@@ -41,9 +41,9 @@ Map<String, String> validateUserForm({
         errors['lrn'] = 'This LRN is already in use.';
       }
     case RoleKind.parent:
-      if (form.childIds.isEmpty) {
-        errors['childIds'] = 'Select at least one child.';
-      }
+      // Children are optional; a parent can be linked to students later
+      // via edit. Keep the case for exhaustiveness.
+      break;
     case RoleKind.principal:
       // position always has a default, no error path
       break;

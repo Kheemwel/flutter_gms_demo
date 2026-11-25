@@ -1,3 +1,4 @@
+import 'package:flutter_gms_demo/core/models/user_profile.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'package:flutter_gms_demo/core/models/user_account.dart';
@@ -57,5 +58,37 @@ class UserAccounts extends _$UserAccounts {
   Future<void> delete(String id) async {
     await _repo.delete(id);
     state = state.where((u) => u.id != id).toList(growable: false);
+  }
+
+  Future<void> linkChildToParent({
+    required String parentUserId,
+    required String childUserId,
+  }) async {
+    final UserAccount? parent = byId(parentUserId);
+    if (parent == null) return;
+    final UserProfile profile = parent.profile;
+    if (profile is! ParentProfile) return;
+    if (profile.childIds.contains(childUserId)) return;
+    final ParentProfile updatedProfile = profile.copyWith(
+      childIds: [...profile.childIds, childUserId],
+    );
+    await update(parent.copyWith(profile: updatedProfile));
+  }
+
+  Future<void> unlinkChildFromParent({
+    required String parentUserId,
+    required String childUserId,
+  }) async {
+    final UserAccount? parent = byId(parentUserId);
+    if (parent == null) return;
+    final UserProfile profile = parent.profile;
+    if (profile is! ParentProfile) return;
+    if (!profile.childIds.contains(childUserId)) return;
+    final ParentProfile updatedProfile = profile.copyWith(
+      childIds: profile.childIds
+          .where((id) => id != childUserId)
+          .toList(growable: false),
+    );
+    await update(parent.copyWith(profile: updatedProfile));
   }
 }

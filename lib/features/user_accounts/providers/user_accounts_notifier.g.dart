@@ -89,7 +89,7 @@ final class UserAccountsProvider
   }
 }
 
-String _$userAccountsHash() => r'5311300a50ceca07b78e289dd7b13febe9cc8ad6';
+String _$userAccountsHash() => r'783f576bb113dbd1ba1781954d1cb33a6c035291';
 
 abstract class _$UserAccounts extends $Notifier<List<UserAccount>> {
   List<UserAccount> build();

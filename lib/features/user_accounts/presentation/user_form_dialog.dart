@@ -65,6 +65,22 @@ class _UserFormDialog extends HookConsumerWidget {
     final ValueNotifier<Map<String, String>> errors =
         useState<Map<String, String>>(const {});
     final ValueNotifier<bool> submitting = useState(false);
+    List<String> initialParentIds = const <String>[];
+    if (kind == RoleKind.student && existing != null) {
+      final List<UserAccount> allUsers = ref.read(userAccountsProvider);
+      final List<String> parents = [];
+      for (final u in allUsers) {
+        final UserProfile p = u.profile;
+        if (p is ParentProfile && p.childIds.contains(existing!.id)) {
+          parents.add(u.id);
+        }
+      }
+      initialParentIds = parents;
+    }
+
+    final ValueNotifier<List<String>> parentIds = useState<List<String>>(
+      initialParentIds,
+    );
 
     UserFormState snapshot() => UserFormState(
       kind: kind,
@@ -73,6 +89,7 @@ class _UserFormDialog extends HookConsumerWidget {
       email: emailCtrl.text,
       lrn: lrnCtrl.text,
       gradeLevel: gradeLevel.value,
+      parentIds: parentIds.value,
       childIds: childIds.value,
       position: position.value,
     );
@@ -137,6 +154,44 @@ class _UserFormDialog extends HookConsumerWidget {
       } else {
         await notifier.update(account);
       }
+
+      // Manage the parent-student links. The link lives on the parent's
+      // childIds, so if this is a student account we may need to update
+      // several parent accounts.
+      if (account.profile is StudentProfile) {
+        final String studentId = account.id;
+        final Set<String> desiredParentIds = parentIds.value.toSet();
+
+        // Find parents currently pointing at this student.
+        final Set<String> currentParentIds = {};
+        for (final u in allUsers) {
+          final UserProfile p = u.profile;
+          if (p is ParentProfile && p.childIds.contains(studentId)) {
+            currentParentIds.add(u.id);
+          }
+        }
+
+        // Unlink parents no longer selected.
+        for (final id in currentParentIds) {
+          if (!desiredParentIds.contains(id)) {
+            await notifier.unlinkChildFromParent(
+              parentUserId: id,
+              childUserId: studentId,
+            );
+          }
+        }
+
+        // Link newly selected parents.
+        for (final id in desiredParentIds) {
+          if (!currentParentIds.contains(id)) {
+            await notifier.linkChildToParent(
+              parentUserId: id,
+              childUserId: studentId,
+            );
+          }
+        }
+      }
+
       if (context.mounted) Navigator.of(context).pop(account);
     }
 
@@ -212,6 +267,12 @@ class _UserFormDialog extends HookConsumerWidget {
                         onChanged: (v) {
                           if (v != null) gradeLevel.value = v;
                         },
+                      ),
+                      const SizedBox(height: 20),
+                      const _SectionLabel('Parents (optional)'),
+                      _ParentCheckboxPicker(
+                        selectedIds: parentIds.value,
+                        onChanged: (v) => parentIds.value = v,
                       ),
                     ],
 
@@ -297,6 +358,69 @@ class _UserFormDialog extends HookConsumerWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _ParentCheckboxPicker extends ConsumerWidget {
+  const _ParentCheckboxPicker({
+    required this.selectedIds,
+    required this.onChanged,
+  });
+
+  final List<String> selectedIds;
+  final ValueChanged<List<String>> onChanged;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final List<UserAccount> parents =
+        ref
+            .watch(userAccountsProvider)
+            .where((u) => u.profile is ParentProfile && !u.isArchived)
+            .toList(growable: false)
+          ..sort((a, b) => a.fullName.compareTo(b.fullName));
+
+    if (parents.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: context.colorScheme.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Text(
+          'No parent accounts available. Create one via User Accounts '
+          'first, or leave this blank — a parent can be linked later.',
+          style: context.textTheme.bodySmall,
+        ),
+      );
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: context.colorScheme.outlineVariant),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        children: [
+          for (final p in parents)
+            CheckboxListTile(
+              dense: true,
+              title: Text(p.fullName),
+              subtitle: Text(p.email),
+              value: selectedIds.contains(p.id),
+              controlAffinity: ListTileControlAffinity.leading,
+              onChanged: (bool? v) {
+                final next = List<String>.from(selectedIds);
+                if (v ?? false) {
+                  next.add(p.id);
+                } else {
+                  next.remove(p.id);
+                }
+                onChanged(next);
+              },
+            ),
+        ],
       ),
     );
   }
@@ -430,7 +554,7 @@ class _ChildPicker extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          'Children (${selected.length} selected)',
+          'Children (${selected.length} selected) — optional',
           style: context.textTheme.labelLarge,
         ),
         const SizedBox(height: 8),
