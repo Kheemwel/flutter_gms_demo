@@ -1,5 +1,6 @@
 import 'package:flutter_gms_demo/core/extensions/user_role_x.dart';
 import 'package:flutter_gms_demo/core/models/role.dart';
+import 'package:flutter_gms_demo/features/user_accounts/providers/user_accounts_notifier.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -16,6 +17,7 @@ class ViewUserDialog extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final Role? role = ref.watch(roleByIdProvider(user.roleId));
+    final List<UserAccount> allUsers = ref.watch(userAccountsProvider);
 
     return Dialog(
       child: ConstrainedBox(
@@ -118,7 +120,7 @@ class ViewUserDialog extends ConsumerWidget {
                         label: 'Remember token',
                         value: 'Set (demo only)',
                       ),
-                    ..._profileDetails(user.profile),
+                    ..._profileDetails(user, allUsers),
                   ],
                 ),
               ),
@@ -129,7 +131,8 @@ class ViewUserDialog extends ConsumerWidget {
     );
   }
 
-  List<Widget> _profileDetails(UserProfile profile) {
+  List<Widget> _profileDetails(UserAccount user, List<UserAccount> allUsers) {
+    final UserProfile profile = user.profile;
     return switch (profile) {
       StudentProfile() => [
         const _SectionHeader('Student profile'),
@@ -139,10 +142,14 @@ class ViewUserDialog extends ConsumerWidget {
           label: 'School level',
           value: profile.gradeLevel.schoolLevel.label,
         ),
+        _DetailRow(label: 'Parents', value: _parentsDisplay(user.id, allUsers)),
       ],
       ParentProfile() => [
         const _SectionHeader('Parent profile'),
-        _DetailRow(label: 'Children', value: profile.childIds.join(', ')),
+        _DetailRow(
+          label: 'Children',
+          value: _childrenDisplay(profile.childIds, allUsers),
+        ),
       ],
       PrincipalProfile() => [
         const _SectionHeader('Principal profile'),
@@ -165,6 +172,38 @@ class ViewUserDialog extends ConsumerWidget {
     }
     return (parts.first.substring(0, 1) + parts.last.substring(0, 1))
         .toUpperCase();
+  }
+
+  String _childrenDisplay(List<String> childIds, List<UserAccount> allUsers) {
+    if (childIds.isEmpty) return 'None';
+    final List<String> lines = [];
+    for (final id in childIds) {
+      UserAccount? match;
+      for (final u in allUsers) {
+        if (u.id == id) {
+          match = u;
+          break;
+        }
+      }
+      if (match != null) {
+        lines.add('${match.fullName} (${match.email})');
+      } else {
+        lines.add('Unknown student (id: $id)');
+      }
+    }
+    return lines.join('\n');
+  }
+
+  String _parentsDisplay(String studentId, List<UserAccount> allUsers) {
+    final List<String> lines = [];
+    for (final u in allUsers) {
+      final UserProfile p = u.profile;
+      if (p is ParentProfile && p.childIds.contains(studentId)) {
+        lines.add('${u.fullName} (${u.email})');
+      }
+    }
+    if (lines.isEmpty) return 'None';
+    return lines.join('\n');
   }
 }
 

@@ -1,4 +1,5 @@
 import 'package:flutter_gms_demo/core/models/role.dart';
+import 'package:flutter_gms_demo/features/user_accounts/providers/user_accounts_notifier.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
@@ -224,6 +225,10 @@ class ProfilePage extends HookConsumerWidget {
                     'School level',
                     (me.profile as StudentProfile).gradeLevel.schoolLevel.label,
                   ),
+                  (
+                    'Parents',
+                    _parentsDisplay(me.id, ref.watch(userAccountsProvider)),
+                  ), // ← new
                 ],
               ),
             ],
@@ -234,7 +239,10 @@ class ProfilePage extends HookConsumerWidget {
                 rows: [
                   (
                     'Children',
-                    (me.profile as ParentProfile).childIds.join(', '),
+                    _childrenDisplay(
+                      (me.profile as ParentProfile).childIds,
+                      ref.watch(userAccountsProvider),
+                    ),
                   ),
                 ],
               ),
@@ -252,6 +260,38 @@ class ProfilePage extends HookConsumerWidget {
         ),
       ),
     );
+  }
+
+  String _childrenDisplay(List<String> childIds, List<UserAccount> allUsers) {
+    if (childIds.isEmpty) return 'None';
+    final List<String> lines = [];
+    for (final id in childIds) {
+      UserAccount? match;
+      for (final u in allUsers) {
+        if (u.id == id) {
+          match = u;
+          break;
+        }
+      }
+      if (match != null) {
+        lines.add('${match.fullName} (${match.email})');
+      } else {
+        lines.add('Unknown student (id: $id)');
+      }
+    }
+    return lines.join('\n');
+  }
+
+  String _parentsDisplay(String studentId, List<UserAccount> allUsers) {
+    final List<String> lines = [];
+    for (final u in allUsers) {
+      final UserProfile p = u.profile;
+      if (p is ParentProfile && p.childIds.contains(studentId)) {
+        lines.add('${u.fullName} (${u.email})');
+      }
+    }
+    if (lines.isEmpty) return 'None';
+    return lines.join('\n');
   }
 }
 
