@@ -12,6 +12,10 @@ import 'package:flutter_gms_demo/core/models/user_account.dart';
 import 'package:flutter_gms_demo/features/auth/providers/auth_notifier.dart';
 import 'package:flutter_gms_demo/features/roles/providers/role_providers.dart';
 
+/// Width at and above which the sidebar is persistent. Below this,
+/// the sidebar becomes a modal drawer opened from the top bar.
+const double _kSidebarBreakpoint = 900;
+
 class AppShell extends ConsumerWidget {
   const AppShell({super.key, required this.child});
   final Widget child;
@@ -21,30 +25,70 @@ class AppShell extends ConsumerWidget {
     final UserAccount? user = ref.watch(authProvider);
     if (user == null) return const SizedBox.shrink();
 
-    return Scaffold(
-      body: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _Sidebar(user: user),
-          const VerticalDivider(width: 1),
-          Expanded(
-            child: Column(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final bool isWide = constraints.maxWidth >= _kSidebarBreakpoint;
+
+        if (isWide) {
+          // Desktop / wide tablet: persistent sidebar.
+          return Scaffold(
+            body: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _TopBar(user: user),
-                const Divider(height: 1),
-                Expanded(child: child),
+                _Sidebar(user: user, closeDrawerOnTap: false),
+                const VerticalDivider(width: 1),
+                Expanded(
+                  child: Column(
+                    children: [
+                      _TopBar(user: user, onMenuTap: null),
+                      const Divider(height: 1),
+                      Expanded(child: child),
+                    ],
+                  ),
+                ),
               ],
             ),
+          );
+        }
+
+        // Mobile / narrow tablet: drawer.
+        return Scaffold(
+          drawer: Drawer(
+            width: 280,
+            child: _Sidebar(user: user, closeDrawerOnTap: true),
           ),
-        ],
-      ),
+          body: Builder(
+            // Builder gives us a context below the Scaffold, so
+            // Scaffold.of(context) resolves to the Scaffold that owns
+            // this Drawer.
+            builder: (scaffoldContext) {
+              return Column(
+                children: [
+                  _TopBar(
+                    user: user,
+                    onMenuTap: () => Scaffold.of(scaffoldContext).openDrawer(),
+                  ),
+                  const Divider(height: 1),
+                  Expanded(child: child),
+                ],
+              );
+            },
+          ),
+        );
+      },
     );
   }
 }
 
 class _Sidebar extends ConsumerWidget {
-  const _Sidebar({required this.user});
+  const _Sidebar({required this.user, required this.closeDrawerOnTap});
+
   final UserAccount user;
+
+  /// When true, tapping a nav item (or Logout) closes the enclosing
+  /// drawer before navigating. Set to false when the sidebar is
+  /// persistent (no drawer to close).
+  final bool closeDrawerOnTap;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -54,6 +98,11 @@ class _Sidebar extends ConsumerWidget {
         .where((_NavItem i) => _canSee(privileges, i))
         .toList();
 
+    void goTo(String path) {
+      if (closeDrawerOnTap) Navigator.of(context).pop();
+      context.go(path);
+    }
+
     return Material(
       color: context.colorScheme.surface,
       child: SizedBox(
@@ -61,7 +110,7 @@ class _Sidebar extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _BrandBlock(),
+            const _BrandBlock(),
             const Divider(height: 1),
             Expanded(
               child: ListView(
@@ -103,7 +152,7 @@ class _Sidebar extends ConsumerWidget {
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: 12,
                         ),
-                        onTap: () => context.go(item.path),
+                        onTap: () => goTo(item.path),
                       ),
                     ),
                 ],
@@ -129,6 +178,7 @@ class _Sidebar extends ConsumerWidget {
                 ),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 12),
                 onTap: () {
+                  if (closeDrawerOnTap) Navigator.of(context).pop();
                   ref.read(authProvider.notifier).logout();
                   context.go('/');
                 },
@@ -149,6 +199,8 @@ class _Sidebar extends ConsumerWidget {
 }
 
 class _BrandBlock extends ConsumerWidget {
+  const _BrandBlock();
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final SiteContent content = ref.watch(siteContentProvider);
@@ -196,8 +248,14 @@ class _BrandBlock extends ConsumerWidget {
 }
 
 class _TopBar extends ConsumerWidget {
-  const _TopBar({required this.user});
+  const _TopBar({required this.user, required this.onMenuTap});
+
   final UserAccount user;
+
+  /// When non-null, a hamburger icon is shown at the leading edge
+  /// that opens the sidebar drawer. When null, the leading edge is
+  /// empty (persistent sidebar mode).
+  final VoidCallback? onMenuTap;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -213,9 +271,18 @@ class _TopBar extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       child: Row(
         children: [
+          if (onMenuTap != null) ...[
+            IconButton(
+              tooltip: 'Open menu',
+              onPressed: onMenuTap,
+              icon: const Icon(Icons.menu_rounded),
+            ),
+            const SizedBox(width: 4),
+          ],
           Text(
             ref.watch(siteContentProvider.select((selector) => selector.title)),
             style: context.textTheme.titleMedium,
+            overflow: TextOverflow.ellipsis,
           ),
           const Spacer(),
           IconButton(
@@ -347,15 +414,18 @@ class _TopBar extends ConsumerWidget {
                     ),
                   ),
                 ),
-                const SizedBox(width: 10),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(user.fullName, style: context.textTheme.labelLarge),
-                    Text(user.email, style: context.textTheme.bodySmall),
-                  ],
-                ),
+                // On narrow viewports, hide name + email to save space.
+                if (MediaQuery.of(context).size.width >= 600) ...[
+                  const SizedBox(width: 10),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(user.fullName, style: context.textTheme.labelLarge),
+                      Text(user.email, style: context.textTheme.bodySmall),
+                    ],
+                  ),
+                ],
               ],
             ),
           ),

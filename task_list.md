@@ -93,8 +93,8 @@ Goal: the app should be usable on mobile-width viewports (phones and small table
 
 ### Shell and navigation
 
-- [ ] **Sidebar collapses on narrow viewports.** Below a breakpoint (~900px), replace the persistent 260px sidebar with either a `Drawer` opened by a hamburger icon in the top bar, or a `NavigationBar` at the bottom. Pick one and be consistent — do not mix.
-- [ ] **Top bar adapts.** At mobile widths, collapse the user name + email next to the avatar (hide them, leave the avatar + dropdown). Help and notification icons stay. Hamburger (if using Drawer) gets added to the leading edge.
+- [x] **Sidebar collapses on narrow viewports.** Below a breakpoint (~900px), replace the persistent 260px sidebar with either a `Drawer` opened by a hamburger icon in the top bar, or a `NavigationBar` at the bottom. Pick one and be consistent — do not mix.
+- [x] **Top bar adapts.** At mobile widths, collapse the user name + email next to the avatar (hide them, leave the avatar + dropdown). Help and notification icons stay. Hamburger (if using Drawer) gets added to the leading edge.
 - [ ] **Content area expands** to fill the freed-up width when the sidebar collapses.
 
 ### Tables
