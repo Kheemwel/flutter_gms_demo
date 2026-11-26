@@ -65,7 +65,7 @@
 ### User Manual
 
 - [x] Add a user manual / help page describing what the app is about and how to use it.
-- [ ] (follow-up) Add the Help entry to the sidebar (`_navItems`) if not already present, or keep it top-bar-only if that's the chosen design. Verify discoverability on narrow viewports after the responsive work in Phase 2.5.
+- [x] (follow-up) Add the Help entry to the sidebar (`_navItems`) if not already present, or keep it top-bar-only if that's the chosen design. Verify discoverability on narrow viewports after the responsive work in Phase 2.5.
 
 ### Signing
 
