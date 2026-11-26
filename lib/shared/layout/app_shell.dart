@@ -218,6 +218,12 @@ class _TopBar extends ConsumerWidget {
             style: context.textTheme.titleMedium,
           ),
           const Spacer(),
+          IconButton(
+            tooltip: 'User manual',
+            onPressed: () => context.go('/app/help'),
+            icon: const Icon(Icons.help_outline_rounded),
+          ),
+          const SizedBox(width: 4),
           PopupMenuButton<String>(
             tooltip: 'Notifications',
             offset: const Offset(0, 44),
@@ -457,6 +463,12 @@ const List<_NavItem> _navItems = <_NavItem>[
     '/app/notifications',
     'Notifications',
     Icons.notifications_rounded,
+    <Privilege>{},
+  ),
+  _NavItem(
+    '/app/help',
+    'User Manual',
+    Icons.help_outline_rounded,
     <Privilege>{},
   ),
 ];
