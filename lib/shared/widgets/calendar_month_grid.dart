@@ -9,12 +9,16 @@ class CalendarMonthGrid extends StatelessWidget {
     required this.selectedDay,
     required this.eventCounts,
     required this.onDaySelected,
+    this.onMonthChanged,
+    this.compact = false,
   });
 
   final DateTime anchor; // first day of the visible month
   final DateTime selectedDay;
   final Map<int, int> eventCounts;
   final ValueChanged<DateTime> onDaySelected;
+  final ValueChanged<DateTime>? onMonthChanged;
+  final bool compact;
 
   static const List<String> _weekdayLabels = [
     'Mon',
@@ -52,6 +56,7 @@ class CalendarMonthGrid extends StatelessWidget {
           isSelected: isSelected,
           isToday: isToday,
           eventCount: count,
+          compact: compact,
           onTap: () => onDaySelected(date),
         ),
       );
@@ -67,7 +72,7 @@ class CalendarMonthGrid extends StatelessWidget {
               tooltip: 'Previous month',
               onPressed: () {
                 final prev = DateTime(anchor.year, anchor.month - 1, 1);
-                onDaySelected(prev);
+                (onMonthChanged ?? onDaySelected)(prev);
               },
               icon: const Icon(Icons.chevron_left_rounded),
             ),
@@ -82,7 +87,7 @@ class CalendarMonthGrid extends StatelessWidget {
               tooltip: 'Next month',
               onPressed: () {
                 final next = DateTime(anchor.year, anchor.month + 1, 1);
-                onDaySelected(next);
+                (onMonthChanged ?? onDaySelected)(next);
               },
               icon: const Icon(Icons.chevron_right_rounded),
             ),
@@ -151,6 +156,7 @@ class _DayCell extends StatelessWidget {
     required this.isSelected,
     required this.isToday,
     required this.eventCount,
+    required this.compact,
     required this.onTap,
   });
 
@@ -158,6 +164,7 @@ class _DayCell extends StatelessWidget {
   final bool isSelected;
   final bool isToday;
   final int eventCount;
+  final bool compact;
   final VoidCallback onTap;
 
   @override
@@ -177,7 +184,7 @@ class _DayCell extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
+          padding: EdgeInsets.symmetric(vertical: compact ? 4 : 8),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [

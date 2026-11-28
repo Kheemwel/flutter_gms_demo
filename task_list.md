@@ -107,12 +107,13 @@ Goal: the app should be usable on mobile-width viewports (phones and small table
 ### Two-column layouts
 
 - [ ] **Dashboard `_TwoColumn`** already stacks below 900px — verify it works and doesn't overflow.
-- [ ] **Guidance Program calendar + day detail** — the two-column `Row` needs to stack (calendar on top, event list below) below ~800px. Currently the calendar squeezes unreadably.
+- [x] **Guidance Program calendar + day detail** — below 720px, displays only the calendar (scrollable with `compact` grid sizing on short viewports) and opens a full modal bottom sheet on day tap; tapping an event swaps the sheet content to event details via `AnimatedSwitcher` with a back button.
 - [x] **Help page two-pane nav + content** — the left nav (280px) + content pane collapses to a single-pane reading view on narrow viewports below ~900px, with a Topics button opening a table of contents drawer on demand.
 
 ### Dialogs
 
-- [ ] **All dialogs** with `ConstrainedBox(maxWidth: …)` need to relax to `maxWidth: double.infinity` (or a much larger cap) on narrow viewports. Otherwise they overflow horizontally. Check: `user_form_dialog.dart`, `inventory_form_dialog.dart`, `write_anecdotal_dialog.dart`, `fill_form_dialog.dart`, `create_form_dialog.dart`, `new_request_dialog.dart`, `approval_details_dialog.dart`, `signature_pad_dialog.dart`, `view_user_dialog.dart`, `student_detail_dialog.dart`.
+- [x] **Guidance Program dialogs** — `event_form_dialog.dart` switches to `Dialog.fullscreen` below 720px; `schedule_tag_form_dialog.dart` switches to a full modal bottom sheet below 720px; `view_event_dialog.dart` is handled inline inside the day-events bottom sheet on small screens.
+- [ ] **Remaining dialogs** with `ConstrainedBox(maxWidth: …)` need to relax to `maxWidth: double.infinity` (or use `Dialog.fullscreen` / bottom sheets) on narrow viewports. Check: `user_form_dialog.dart`, `inventory_form_dialog.dart`, `write_anecdotal_dialog.dart`, `fill_form_dialog.dart`, `create_form_dialog.dart`, `new_request_dialog.dart`, `approval_details_dialog.dart`, `signature_pad_dialog.dart`, `view_user_dialog.dart`, `student_detail_dialog.dart`.
 - [ ] **Signature pad** — the pen area should size to viewport width on mobile.
 
 ### Specific screens to spot-check

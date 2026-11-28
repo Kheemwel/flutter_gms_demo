@@ -137,6 +137,158 @@ class _EventFormDialog extends HookConsumerWidget {
       if (context.mounted) Navigator.of(context).pop(program);
     }
 
+    final bool isSmall = MediaQuery.sizeOf(context).width < 720;
+
+    final Widget scrollBody = SingleChildScrollView(
+      padding: EdgeInsets.all(isSmall ? 16 : 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TextField(
+            controller: titleCtrl,
+            decoration: InputDecoration(
+              labelText: 'Title',
+              prefixIcon: const Icon(Icons.event_note_rounded),
+              errorText: errors.value['title'],
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: descCtrl,
+            maxLines: 2,
+            decoration: const InputDecoration(
+              labelText: 'Description (optional)',
+              prefixIcon: Icon(Icons.notes_rounded),
+            ),
+          ),
+          const SizedBox(height: 12),
+          _DateTimeField(
+            label: 'Starts at',
+            value: startAt.value,
+            onChanged: (v) => startAt.value = v,
+          ),
+          _DateTimeField(
+            label: 'Ends at',
+            value: endAt.value,
+            onChanged: (v) => endAt.value = v,
+            error: errors.value['dates'],
+          ),
+          DropdownButtonFormField<String>(
+            initialValue: tagId.value,
+            decoration: InputDecoration(
+              labelText: 'Schedule tag',
+              prefixIcon: const Icon(Icons.label_outline_rounded),
+              errorText: errors.value['tag'],
+            ),
+            items: [
+              for (final t in tags)
+                DropdownMenuItem(
+                  value: t.id,
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 12,
+                        height: 12,
+                        decoration: BoxDecoration(
+                          color: Color(t.colorValue),
+                          borderRadius: BorderRadius.circular(3),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(t.tagName),
+                    ],
+                  ),
+                ),
+            ],
+            onChanged: (v) => tagId.value = v,
+          ),
+          const SizedBox(height: 16),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            title: const Text('Public event'),
+            subtitle: const Text(
+              'Visible to all users. Turn off to invite '
+              'specific users instead.',
+            ),
+            value: isPublic.value,
+            onChanged: (v) => isPublic.value = v,
+          ),
+          if (!isPublic.value) ...[
+            const SizedBox(height: 12),
+            Text('Invite recipients', style: context.textTheme.titleSmall),
+            const SizedBox(height: 8),
+            Container(
+              decoration: BoxDecoration(
+                border: Border.all(color: context.colorScheme.outlineVariant),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              constraints: const BoxConstraints(maxHeight: 220),
+              child: ListView(
+                shrinkWrap: true,
+                children: [
+                  for (final u in users)
+                    if (u.id != me?.id && !u.isArchived)
+                      CheckboxListTile(
+                        dense: true,
+                        title: Text(u.fullName),
+                        subtitle: Text(u.email),
+                        value: recipients.value.contains(u.id),
+                        controlAffinity: ListTileControlAffinity.leading,
+                        onChanged: (v) {
+                          final next = Set<String>.from(recipients.value);
+                          if (v ?? false) {
+                            next.add(u.id);
+                          } else {
+                            next.remove(u.id);
+                          }
+                          recipients.value = next;
+                        },
+                      ),
+                ],
+              ),
+            ),
+            if (errors.value['recipients'] != null) ...[
+              const SizedBox(height: 6),
+              Text(
+                errors.value['recipients']!,
+                style: context.textTheme.bodySmall?.copyWith(
+                  color: context.colorScheme.error,
+                ),
+              ),
+            ],
+            const SizedBox(height: 6),
+            Text(
+              'You will be added automatically.',
+              style: context.textTheme.bodySmall,
+            ),
+          ],
+        ],
+      ),
+    );
+    if (isSmall) {
+      return Dialog.fullscreen(
+        child: Scaffold(
+          appBar: AppBar(
+            leading: IconButton(
+              onPressed: () => Navigator.of(context).pop(),
+              icon: const Icon(Icons.close_rounded),
+            ),
+            title: Text(existing == null ? 'Add event' : 'Edit event'),
+            actions: [
+              Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: FilledButton(
+                  onPressed: submit,
+                  child: Text(existing == null ? 'Create' : 'Save'),
+                ),
+              ),
+            ],
+          ),
+          body: scrollBody,
+        ),
+      );
+    }
+
     return Dialog(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 620, maxHeight: 780),
@@ -162,142 +314,7 @@ class _EventFormDialog extends HookConsumerWidget {
               ),
             ),
             const Divider(height: 1),
-            Flexible(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    TextField(
-                      controller: titleCtrl,
-                      decoration: InputDecoration(
-                        labelText: 'Title',
-                        prefixIcon: const Icon(Icons.event_note_rounded),
-                        errorText: errors.value['title'],
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: descCtrl,
-                      maxLines: 2,
-                      decoration: const InputDecoration(
-                        labelText: 'Description (optional)',
-                        prefixIcon: Icon(Icons.notes_rounded),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    _DateTimeField(
-                      label: 'Starts at',
-                      value: startAt.value,
-                      onChanged: (v) => startAt.value = v,
-                    ),
-                    _DateTimeField(
-                      label: 'Ends at',
-                      value: endAt.value,
-                      onChanged: (v) => endAt.value = v,
-                      error: errors.value['dates'],
-                    ),
-                    DropdownButtonFormField<String>(
-                      initialValue: tagId.value,
-                      decoration: InputDecoration(
-                        labelText: 'Schedule tag',
-                        prefixIcon: const Icon(Icons.label_outline_rounded),
-                        errorText: errors.value['tag'],
-                      ),
-                      items: [
-                        for (final t in tags)
-                          DropdownMenuItem(
-                            value: t.id,
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 12,
-                                  height: 12,
-                                  decoration: BoxDecoration(
-                                    color: Color(t.colorValue),
-                                    borderRadius: BorderRadius.circular(3),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Text(t.tagName),
-                              ],
-                            ),
-                          ),
-                      ],
-                      onChanged: (v) => tagId.value = v,
-                    ),
-                    const SizedBox(height: 16),
-                    SwitchListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: const Text('Public event'),
-                      subtitle: const Text(
-                        'Visible to all users. Turn off to invite '
-                        'specific users instead.',
-                      ),
-                      value: isPublic.value,
-                      onChanged: (v) => isPublic.value = v,
-                    ),
-                    if (!isPublic.value) ...[
-                      const SizedBox(height: 12),
-                      Text(
-                        'Invite recipients',
-                        style: context.textTheme.titleSmall,
-                      ),
-                      const SizedBox(height: 8),
-                      Container(
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: context.colorScheme.outlineVariant,
-                          ),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        constraints: const BoxConstraints(maxHeight: 220),
-                        child: ListView(
-                          shrinkWrap: true,
-                          children: [
-                            for (final u in users)
-                              if (u.id != me?.id && !u.isArchived)
-                                CheckboxListTile(
-                                  dense: true,
-                                  title: Text(u.fullName),
-                                  subtitle: Text(u.email),
-                                  value: recipients.value.contains(u.id),
-                                  controlAffinity:
-                                      ListTileControlAffinity.leading,
-                                  onChanged: (v) {
-                                    final next = Set<String>.from(
-                                      recipients.value,
-                                    );
-                                    if (v ?? false) {
-                                      next.add(u.id);
-                                    } else {
-                                      next.remove(u.id);
-                                    }
-                                    recipients.value = next;
-                                  },
-                                ),
-                          ],
-                        ),
-                      ),
-                      if (errors.value['recipients'] != null) ...[
-                        const SizedBox(height: 6),
-                        Text(
-                          errors.value['recipients']!,
-                          style: context.textTheme.bodySmall?.copyWith(
-                            color: context.colorScheme.error,
-                          ),
-                        ),
-                      ],
-                      const SizedBox(height: 6),
-                      Text(
-                        'You will be added automatically.',
-                        style: context.textTheme.bodySmall,
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
+            Flexible(child: scrollBody),
             const Divider(height: 1),
             Padding(
               padding: const EdgeInsets.all(16),
