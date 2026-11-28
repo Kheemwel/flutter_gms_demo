@@ -66,6 +66,7 @@
 
 - [x] Add a user manual / help page describing what the app is about and how to use it.
 - [x] (follow-up) Add the Help entry to the sidebar (`_navItems`) if not already present, or keep it top-bar-only if that's the chosen design. Verify discoverability on narrow viewports after the responsive work in Phase 2.5.
+- [x] Make User Manual / Help Page responsive with a bottom sheet table-of-contents navigation.
 
 ### Signing
 
@@ -105,7 +106,7 @@ Goal: the app should be usable on mobile-width viewports (phones and small table
 
 - [ ] **Dashboard `_TwoColumn`** already stacks below 900px — verify it works and doesn't overflow.
 - [ ] **Guidance Program calendar + day detail** — the two-column `Row` needs to stack (calendar on top, event list below) below ~800px. Currently the calendar squeezes unreadably.
-- [ ] **Help page two-pane nav + content** — the left nav (280px) + content pane needs to collapse to a single-pane layout below ~800px. Either a dropdown to select section, or a full-screen nav that pushes to content on tap.
+- [x] **Help page two-pane nav + content** — the left nav (280px) + content pane collapses to a single-pane reading view on narrow viewports below ~900px, with a Topics button opening a table of contents drawer on demand.
 
 ### Dialogs
 
