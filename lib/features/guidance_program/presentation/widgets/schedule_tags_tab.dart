@@ -43,12 +43,41 @@ class ScheduleTagsTab extends ConsumerWidget {
         const SizedBox(height: 12),
         Expanded(
           child: AppDataTable<GuidanceScheduleTag>(
-            columns: const [
-              AppDataTableColumn(label: 'Tag'),
-              AppDataTableColumn(label: 'Color'),
-              AppDataTableColumn(label: 'Events', numeric: true),
-              AppDataTableColumn(label: ''),
+            columns: [
+              AppDataTableColumn(
+                label: 'Tag',
+                sortBy: (t) => t.tagName.toLowerCase(),
+              ),
+              AppDataTableColumn(
+                label: 'Color',
+                sortBy: (t) => t.color.toLowerCase(),
+              ),
+              AppDataTableColumn(
+                label: 'Events',
+                numeric: true,
+                sortBy: (t) => ref.read(programCountForTagProvider(t.id)),
+              ),
+              const AppDataTableColumn(label: ''),
             ],
+            mobileTileBuilder: (context, t) {
+              final int count = ref.watch(programCountForTagProvider(t.id));
+              return ListTile(
+                leading: Container(
+                  width: 16,
+                  height: 16,
+                  decoration: BoxDecoration(
+                    color: Color(t.colorValue),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+                title: Text(t.tagName),
+                subtitle: Text('${t.color} • $count events'),
+                trailing: IconButton(
+                  icon: const Icon(Icons.delete_outline_rounded),
+                  onPressed: () => _delete(context, ref, t),
+                ),
+              );
+            },
             emptyState: const AppEmptyState(
               icon: Icons.label_outline_rounded,
               title: 'No tags yet',

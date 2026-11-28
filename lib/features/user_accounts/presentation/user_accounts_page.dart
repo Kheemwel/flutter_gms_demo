@@ -2,6 +2,7 @@ import 'package:flutter_gms_demo/core/extensions/user_role_x.dart';
 import 'package:flutter_gms_demo/core/models/role.dart';
 import 'package:flutter_gms_demo/features/user_accounts/presentation/role_picker_dialog.dart';
 import 'package:flutter_gms_demo/features/user_accounts/presentation/user_form_dialog.dart';
+import 'package:flutter_gms_demo/shared/widgets/app_data_table.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -221,114 +222,136 @@ class _UsersTable extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Card(
-      margin: EdgeInsets.zero,
-      clipBehavior: Clip.antiAlias,
-      child: SingleChildScrollView(
-        child: SizedBox(
-          width: double.infinity,
-          child: DataTable(
-            showCheckboxColumn: false,
-            columns: const [
-              DataColumn(label: Text('Name')),
-              DataColumn(label: Text('Email')),
-              DataColumn(label: Text('Role')),
-              DataColumn(label: Text('Last login')),
-              DataColumn(label: Text('')),
-            ],
-            rows: [for (final u in users) _row(context, ref, u)],
-          ),
+    return AppDataTable<UserAccount>(
+      columns: [
+        AppDataTableColumn(
+          label: 'Name',
+          sortBy: (u) => u.fullName.toLowerCase(),
         ),
-      ),
+        AppDataTableColumn(
+          label: 'Email',
+          sortBy: (u) => u.email.toLowerCase(),
+        ),
+        AppDataTableColumn(
+          label: 'Role',
+          sortBy: (u) =>
+              (ref.read(roleByIdProvider(u.roleId))?.name ?? '').toLowerCase(),
+        ),
+        AppDataTableColumn(label: 'Last login', sortBy: (u) => u.lastLogin),
+        const AppDataTableColumn(label: ''),
+      ],
+      onRowTap: (u) => _viewUser(context, u),
+      mobileTileBuilder: (context, u) {
+        final Role? role = ref.watch(roleByIdProvider(u.roleId));
+        return ListTile(
+          leading: CircleAvatar(
+            radius: 16,
+            backgroundColor: context.colorScheme.primaryContainer,
+            child: Text(
+              _initials(u.fullName),
+              style: context.textTheme.labelSmall?.copyWith(
+                color: context.colorScheme.onPrimaryContainer,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          title: Text(u.fullName),
+          subtitle: Text(
+            '${role?.name ?? '—'} • ${u.lastLogin == null ? 'Never' : _formatRelative(u.lastLogin!)}',
+          ),
+          trailing: _actionsMenu(context, ref, u),
+        );
+      },
+      rows: [for (final u in users) _row(context, ref, u)],
     );
   }
 
-  DataRow _row(BuildContext context, WidgetRef ref, UserAccount u) {
+  AppDataRow<UserAccount> _row(
+    BuildContext context,
+    WidgetRef ref,
+    UserAccount u,
+  ) {
     final Role? role = ref.watch(roleByIdProvider(u.roleId));
-    return DataRow(
-      onSelectChanged: (_) => _viewUser(context, u),
+    return AppDataRow<UserAccount>(
+      payload: u,
       cells: [
-        DataCell(
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 14,
-                backgroundColor: context.colorScheme.primaryContainer,
-                child: Text(
-                  _initials(u.fullName),
-                  style: context.textTheme.labelSmall?.copyWith(
-                    color: context.colorScheme.onPrimaryContainer,
-                    fontWeight: FontWeight.w700,
-                  ),
+        Row(
+          children: [
+            CircleAvatar(
+              radius: 14,
+              backgroundColor: context.colorScheme.primaryContainer,
+              child: Text(
+                _initials(u.fullName),
+                style: context.textTheme.labelSmall?.copyWith(
+                  color: context.colorScheme.onPrimaryContainer,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-              const SizedBox(width: 10),
-              Text(u.fullName),
-            ],
+            ),
+            const SizedBox(width: 10),
+            Text(u.fullName),
+          ],
+        ),
+        Text(u.email),
+        Chip(
+          avatar: Icon(role?.kind.icon ?? Icons.person_rounded, size: 14),
+          label: Text(role?.name ?? '—'),
+          visualDensity: VisualDensity.compact,
+        ),
+        Text(u.lastLogin == null ? 'Never' : _formatRelative(u.lastLogin!)),
+        _actionsMenu(context, ref, u),
+      ],
+    );
+  }
+
+  Widget _actionsMenu(BuildContext context, WidgetRef ref, UserAccount u) {
+    return PopupMenuButton<_RowAction>(
+      onSelected: (a) => _handle(context, ref, u, a),
+      itemBuilder: (context) => [
+        const PopupMenuItem(
+          value: _RowAction.view,
+          child: ListTile(
+            leading: Icon(Icons.visibility_outlined),
+            title: Text('View details'),
+            contentPadding: EdgeInsets.zero,
           ),
         ),
-        DataCell(Text(u.email)),
-        DataCell(
-          Chip(
-            avatar: Icon(role?.kind.icon ?? Icons.person_rounded, size: 14),
-            label: Text(role?.name ?? '—'),
-            visualDensity: VisualDensity.compact,
+        if (canManage) ...[
+          const PopupMenuItem(
+            value: _RowAction.edit,
+            child: ListTile(
+              leading: Icon(Icons.edit_outlined),
+              title: Text('Edit'),
+              contentPadding: EdgeInsets.zero,
+            ),
           ),
-        ),
-        DataCell(
-          Text(u.lastLogin == null ? 'Never' : _formatRelative(u.lastLogin!)),
-        ),
-        DataCell(
-          PopupMenuButton<_RowAction>(
-            onSelected: (a) => _handle(context, ref, u, a),
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: _RowAction.view,
-                child: ListTile(
-                  leading: Icon(Icons.visibility_outlined),
-                  title: Text('View details'),
-                  contentPadding: EdgeInsets.zero,
-                ),
+          if (isArchivedTab)
+            const PopupMenuItem(
+              value: _RowAction.unarchive,
+              child: ListTile(
+                leading: Icon(Icons.unarchive_outlined),
+                title: Text('Restore'),
+                contentPadding: EdgeInsets.zero,
               ),
-              if (canManage) ...[
-                const PopupMenuItem(
-                  value: _RowAction.edit,
-                  child: ListTile(
-                    leading: Icon(Icons.edit_outlined),
-                    title: Text('Edit'),
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                ),
-                if (isArchivedTab)
-                  const PopupMenuItem(
-                    value: _RowAction.unarchive,
-                    child: ListTile(
-                      leading: Icon(Icons.unarchive_outlined),
-                      title: Text('Restore'),
-                      contentPadding: EdgeInsets.zero,
-                    ),
-                  )
-                else
-                  const PopupMenuItem(
-                    value: _RowAction.archive,
-                    child: ListTile(
-                      leading: Icon(Icons.archive_outlined),
-                      title: Text('Archive'),
-                      contentPadding: EdgeInsets.zero,
-                    ),
-                  ),
-                const PopupMenuItem(
-                  value: _RowAction.delete,
-                  child: ListTile(
-                    leading: Icon(Icons.delete_outline_rounded),
-                    title: Text('Delete'),
-                    contentPadding: EdgeInsets.zero,
-                  ),
-                ),
-              ],
-            ],
+            )
+          else
+            const PopupMenuItem(
+              value: _RowAction.archive,
+              child: ListTile(
+                leading: Icon(Icons.archive_outlined),
+                title: Text('Archive'),
+                contentPadding: EdgeInsets.zero,
+              ),
+            ),
+          const PopupMenuItem(
+            value: _RowAction.delete,
+            child: ListTile(
+              leading: Icon(Icons.delete_outline_rounded),
+              title: Text('Delete'),
+              contentPadding: EdgeInsets.zero,
+            ),
           ),
-        ),
+        ],
       ],
     );
   }

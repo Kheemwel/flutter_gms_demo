@@ -41,11 +41,31 @@ class CategoriesTab extends ConsumerWidget {
         const SizedBox(height: 12),
         Expanded(
           child: AppDataTable<OffenseCategory>(
-            columns: const [
-              AppDataTableColumn(label: 'Category'),
-              AppDataTableColumn(label: 'Offenses', numeric: true),
-              AppDataTableColumn(label: ''),
+            columns: [
+              AppDataTableColumn(
+                label: 'Category',
+                sortBy: (c) => c.name.toLowerCase(),
+              ),
+              AppDataTableColumn(
+                label: 'Offenses',
+                numeric: true,
+                sortBy: (c) => ref.read(offenseCountForCategoryProvider(c.id)),
+              ),
+              const AppDataTableColumn(label: ''),
             ],
+            mobileTileBuilder: (context, c) {
+              final int count = ref.watch(
+                offenseCountForCategoryProvider(c.id),
+              );
+              return ListTile(
+                title: Text(c.name),
+                subtitle: Text('$count offenses'),
+                trailing: IconButton(
+                  icon: const Icon(Icons.delete_outline_rounded),
+                  onPressed: () => _delete(context, ref, c),
+                ),
+              );
+            },
             emptyState: const AppEmptyState(
               icon: Icons.category_outlined,
               title: 'No categories yet',

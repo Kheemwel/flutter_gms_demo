@@ -43,11 +43,41 @@ class TypesTab extends ConsumerWidget {
                   message: 'Add the first one to get started.',
                 )
               : AppDataTable<ItemType>(
-                  columns: const [
-                    AppDataTableColumn(label: 'Type'),
-                    AppDataTableColumn(label: 'Items using it', numeric: true),
-                    AppDataTableColumn(label: ''),
+                  columns: [
+                    AppDataTableColumn(
+                      label: 'Type',
+                      sortBy: (t) => t.itemType.toLowerCase(),
+                    ),
+                    AppDataTableColumn(
+                      label: 'Items using it',
+                      numeric: true,
+                      sortBy: (t) => ref.read(itemCountForTypeProvider(t.id)),
+                    ),
+                    const AppDataTableColumn(label: ''),
                   ],
+                  onRowTap: (t) async {
+                    final ItemType? updated = await showItemTypeForm(
+                      context,
+                      existing: t,
+                    );
+                    if (updated != null) {
+                      await ref
+                          .read(itemTypesProvider.notifier)
+                          .update(updated);
+                    }
+                  },
+                  mobileTileBuilder: (context, t) {
+                    final int count = ref.watch(itemCountForTypeProvider(t.id));
+                    return ListTile(
+                      title: Text(t.itemType),
+                      subtitle: Text('$count items using it'),
+                      trailing: IconButton(
+                        tooltip: 'Delete',
+                        icon: const Icon(Icons.delete_outline_rounded),
+                        onPressed: () => _delete(context, ref, t),
+                      ),
+                    );
+                  },
                   rows: [
                     for (final t in types)
                       AppDataRow<ItemType>(

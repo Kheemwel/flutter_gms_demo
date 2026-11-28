@@ -100,12 +100,25 @@ class OffensesTab extends ConsumerWidget {
         const SizedBox(height: 12),
         Expanded(
           child: AppDataTable<Offense>(
-            columns: const [
-              AppDataTableColumn(label: 'Offense'),
-              AppDataTableColumn(label: 'Category'),
-              AppDataTableColumn(label: 'Level'),
-              AppDataTableColumn(label: 'Actions', numeric: true),
-              AppDataTableColumn(label: ''),
+            columns: [
+              AppDataTableColumn(
+                label: 'Offense',
+                sortBy: (o) => o.name.toLowerCase(),
+              ),
+              AppDataTableColumn(
+                label: 'Category',
+                sortBy: (o) => (cats[o.categoryId]?.name ?? '').toLowerCase(),
+              ),
+              AppDataTableColumn(
+                label: 'Level',
+                sortBy: (o) => levels[o.levelId]?.severity ?? 0,
+              ),
+              AppDataTableColumn(
+                label: 'Actions',
+                numeric: true,
+                sortBy: (o) => o.actionIds.length,
+              ),
+              const AppDataTableColumn(label: ''),
             ],
             onRowTap: (Offense o) {
               showDialog<void>(
@@ -113,6 +126,16 @@ class OffensesTab extends ConsumerWidget {
                 builder: (_) => ViewOffenseDialog(offense: o),
               );
             },
+            mobileTileBuilder: (context, o) => ListTile(
+              title: Text(o.name),
+              subtitle: Text(
+                '${cats[o.categoryId]?.name ?? '—'} • ${levels[o.levelId]?.name ?? '—'} • ${o.actionIds.length} actions',
+              ),
+              trailing: IconButton(
+                icon: const Icon(Icons.delete_outline_rounded),
+                onPressed: () => _delete(context, ref, o, actions),
+              ),
+            ),
             emptyState: const AppEmptyState(
               icon: Icons.gavel_outlined,
               title: 'No offenses match',

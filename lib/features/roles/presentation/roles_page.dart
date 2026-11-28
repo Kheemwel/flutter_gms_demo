@@ -1,3 +1,4 @@
+import 'package:flutter_gms_demo/shared/widgets/app_data_table.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -166,79 +167,92 @@ class _RolesTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: EdgeInsets.zero,
-      clipBehavior: Clip.antiAlias,
-      child: SingleChildScrollView(
-        child: SizedBox(
-          width: double.infinity,
-          child: DataTable(
-            showCheckboxColumn: false,
-            columns: const [
-              DataColumn(label: Text('Role')),
-              DataColumn(label: Text('Kind')),
-              DataColumn(label: Text('Privileges'), numeric: true),
-              DataColumn(label: Text('Actions')),
-            ],
-            rows: [
-              for (final role in roles)
-                DataRow(
-                  onSelectChanged: (_) => onView(role),
-                  cells: [
-                    DataCell(
-                      Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 14,
-                            backgroundColor:
-                                context.colorScheme.primaryContainer,
-                            child: Icon(
-                              _iconForKind(role.kind.name),
-                              size: 16,
-                              color: context.colorScheme.onPrimaryContainer,
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Text(role.name),
-                        ],
-                      ),
-                    ),
-                    DataCell(
-                      Chip(
-                        label: Text(role.kind.label),
-                        visualDensity: VisualDensity.compact,
-                      ),
-                    ),
-                    DataCell(Text('${role.privileges.length}')),
-                    DataCell(
-                      Row(
-                        children: [
-                          IconButton(
-                            tooltip: 'View',
-                            onPressed: () => onView(role),
-                            icon: const Icon(Icons.visibility_outlined),
-                          ),
-                          if (canManage) ...[
-                            IconButton(
-                              tooltip: 'Edit',
-                              onPressed: () => onEdit(role),
-                              icon: const Icon(Icons.edit_outlined),
-                            ),
-                            IconButton(
-                              tooltip: 'Delete',
-                              onPressed: () => onDelete(role),
-                              icon: const Icon(Icons.delete_outline_rounded),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-            ],
+    return AppDataTable<Role>(
+      columns: [
+        AppDataTableColumn(label: 'Role', sortBy: (r) => r.name.toLowerCase()),
+        AppDataTableColumn(
+          label: 'Kind',
+          sortBy: (r) => r.kind.label.toLowerCase(),
+        ),
+        AppDataTableColumn(
+          label: 'Privileges',
+          numeric: true,
+          sortBy: (r) => r.privileges.length,
+        ),
+        const AppDataTableColumn(label: 'Actions'),
+      ],
+      onRowTap: onView,
+      mobileTileBuilder: (context, role) => ListTile(
+        leading: CircleAvatar(
+          radius: 16,
+          backgroundColor: context.colorScheme.primaryContainer,
+          child: Icon(
+            _iconForKind(role.kind.name),
+            size: 16,
+            color: context.colorScheme.onPrimaryContainer,
           ),
         ),
+        title: Text(role.name),
+        subtitle: Text(
+          '${role.kind.label} • ${role.privileges.length} privileges',
+        ),
+        trailing: canManage
+            ? IconButton(
+                tooltip: 'Delete',
+                onPressed: () => onDelete(role),
+                icon: const Icon(Icons.delete_outline_rounded),
+              )
+            : const Icon(Icons.chevron_right_rounded),
       ),
+      rows: [
+        for (final role in roles)
+          AppDataRow<Role>(
+            payload: role,
+            cells: [
+              Row(
+                children: [
+                  CircleAvatar(
+                    radius: 14,
+                    backgroundColor: context.colorScheme.primaryContainer,
+                    child: Icon(
+                      _iconForKind(role.kind.name),
+                      size: 16,
+                      color: context.colorScheme.onPrimaryContainer,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(role.name),
+                ],
+              ),
+              Chip(
+                label: Text(role.kind.label),
+                visualDensity: VisualDensity.compact,
+              ),
+              Text('${role.privileges.length}'),
+              Row(
+                children: [
+                  IconButton(
+                    tooltip: 'View',
+                    onPressed: () => onView(role),
+                    icon: const Icon(Icons.visibility_outlined),
+                  ),
+                  if (canManage) ...[
+                    IconButton(
+                      tooltip: 'Edit',
+                      onPressed: () => onEdit(role),
+                      icon: const Icon(Icons.edit_outlined),
+                    ),
+                    IconButton(
+                      tooltip: 'Delete',
+                      onPressed: () => onDelete(role),
+                      icon: const Icon(Icons.delete_outline_rounded),
+                    ),
+                  ],
+                ],
+              ),
+            ],
+          ),
+      ],
     );
   }
 

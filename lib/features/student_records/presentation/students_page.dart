@@ -77,14 +77,37 @@ class StudentsPage extends ConsumerWidget {
                         : 'Try a different search or filter.',
                   )
                 : AppDataTable<UserAccount>(
-                    columns: const [
-                      AppDataTableColumn(label: 'Name'),
-                      AppDataTableColumn(label: 'LRN'),
-                      AppDataTableColumn(label: 'Grade'),
-                      AppDataTableColumn(label: 'Email'),
-                      AppDataTableColumn(label: ''),
+                    columns: [
+                      AppDataTableColumn(
+                        label: 'Name',
+                        sortBy: (s) => s.fullName.toLowerCase(),
+                      ),
+                      AppDataTableColumn(
+                        label: 'LRN',
+                        sortBy: (s) => (s.profile as StudentProfile).lrn,
+                      ),
+                      AppDataTableColumn(
+                        label: 'Grade',
+                        sortBy: (s) =>
+                            (s.profile as StudentProfile).gradeLevel.index,
+                      ),
+                      AppDataTableColumn(
+                        label: 'Email',
+                        sortBy: (s) => s.email.toLowerCase(),
+                      ),
+                      const AppDataTableColumn(label: ''),
                     ],
                     onRowTap: (s) => _open(context, s),
+                    mobileTileBuilder: (context, s) {
+                      final profile = s.profile as StudentProfile;
+                      return ListTile(
+                        title: Text(s.fullName),
+                        subtitle: Text(
+                          '${profile.gradeLevel.label} • LRN: ${profile.lrn}',
+                        ),
+                        trailing: const Icon(Icons.chevron_right_rounded),
+                      );
+                    },
                     rows: [
                       for (final s in students)
                         AppDataRow<UserAccount>(

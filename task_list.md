@@ -100,7 +100,9 @@ Goal: the app should be usable on mobile-width viewports (phones and small table
 
 ### Tables
 
-- [ ] **`AppDataTable` scrolls horizontally** on narrow viewports (wrap the `DataTable` in `SingleChildScrollView(scrollDirection: Axis.horizontal)`), or **switches to a card list** below a breakpoint. The card list is more usable on phones; the horizontal scroll is less code. Decide per table or globally.
+- [x] **`AppDataTable` supports horizontal scroll + `mobileTileBuilder`** — wraps `DataTable` in horizontal/vertical `SingleChildScrollView`s, switches to a `ListView` via `mobileTileBuilder` below `mobileBreakpoint` (768px), and includes client-side sorting (`sortBy`) + pagination.
+- [x] **Update remaining `AppDataTable` callers** with `sortBy` and `mobileTileBuilder`: `requests_by_status_tab.dart`, `schedule_tags_tab.dart`, `item_table.dart`, `tags_tab.dart`, `categories_tab.dart`, `levels_tab.dart`, `offenses_tab.dart`.
+- [x] **Migrate raw `DataTable` pages to `AppDataTable`**: `roles_page.dart` and `user_accounts_page.dart`.
 
 ### Two-column layouts
 
@@ -118,9 +120,9 @@ Goal: the app should be usable on mobile-width viewports (phones and small table
 - [ ] **Login page** — form fields stack, buttons remain full-width, no overflow.
 - [ ] **Dashboard** — KPI strip wraps to 2 columns (or 1) below ~600px instead of forcing 3 across.
 - [ ] **User Accounts** — filters row (search + role dropdown) stacks vertically below ~600px.
-- [ ] **Forms list** — `DataTable` scroll or cards.
+- [x] **Forms list** — already uses `AppDataTable` with `mobileTileBuilder`; spot-check at 375×812 and 768×1024.
 - [ ] **Profile page** — form fields and cards stack, no overflow.
-- [ ] **Audit Trail** — same as forms list.
+- [x] **Audit Trail** — already uses `AppDataTable` with `mobileTileBuilder`; spot-check at 375×812 and 768×1024.
 - [ ] **Notifications** — cards already stack, verify no overflow.
 
 ### Verification

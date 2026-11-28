@@ -43,12 +43,43 @@ class DisciplinaryActionsTab extends ConsumerWidget {
         const SizedBox(height: 12),
         Expanded(
           child: AppDataTable<DisciplinaryAction>(
-            columns: const [
-              AppDataTableColumn(label: 'Action'),
-              AppDataTableColumn(label: 'Description'),
-              AppDataTableColumn(label: 'Offenses', numeric: true),
-              AppDataTableColumn(label: ''),
+            columns: [
+              AppDataTableColumn(
+                label: 'Action',
+                sortBy: (a) => a.name.toLowerCase(),
+              ),
+              const AppDataTableColumn(label: 'Description'),
+              AppDataTableColumn(
+                label: 'Offenses',
+                numeric: true,
+                sortBy: (a) => ref.read(offenseCountForActionProvider(a.id)),
+              ),
+              const AppDataTableColumn(label: ''),
             ],
+            onRowTap: (a) async {
+              final DisciplinaryAction? updated =
+                  await showDisciplinaryActionForm(context, existing: a);
+              if (updated != null) {
+                await ref
+                    .read(disciplinaryActionsProvider.notifier)
+                    .update(updated);
+              }
+            },
+            mobileTileBuilder: (context, a) {
+              final int count = ref.watch(offenseCountForActionProvider(a.id));
+              return ListTile(
+                title: Text(a.name),
+                subtitle: Text(
+                  '${a.description.isEmpty ? 'No description' : a.description} • $count offenses',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                trailing: IconButton(
+                  icon: const Icon(Icons.delete_outline_rounded),
+                  onPressed: () => _delete(context, ref, a),
+                ),
+              );
+            },
             emptyState: const AppEmptyState(
               icon: Icons.rule_rounded,
               title: 'No disciplinary actions yet',

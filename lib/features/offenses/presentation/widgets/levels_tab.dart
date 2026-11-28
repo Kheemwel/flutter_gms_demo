@@ -40,12 +40,34 @@ class LevelsTab extends ConsumerWidget {
         const SizedBox(height: 12),
         Expanded(
           child: AppDataTable<OffenseLevel>(
-            columns: const [
-              AppDataTableColumn(label: 'Level'),
-              AppDataTableColumn(label: 'Severity', numeric: true),
-              AppDataTableColumn(label: 'Offenses', numeric: true),
-              AppDataTableColumn(label: ''),
+            columns: [
+              AppDataTableColumn(
+                label: 'Level',
+                sortBy: (l) => l.name.toLowerCase(),
+              ),
+              AppDataTableColumn(
+                label: 'Severity',
+                numeric: true,
+                sortBy: (l) => l.severity,
+              ),
+              AppDataTableColumn(
+                label: 'Offenses',
+                numeric: true,
+                sortBy: (l) => ref.read(offenseCountForLevelProvider(l.id)),
+              ),
+              const AppDataTableColumn(label: ''),
             ],
+            mobileTileBuilder: (context, l) {
+              final int count = ref.watch(offenseCountForLevelProvider(l.id));
+              return ListTile(
+                title: Text(l.name),
+                subtitle: Text('Severity ${l.severity} • $count offenses'),
+                trailing: IconButton(
+                  icon: const Icon(Icons.delete_outline_rounded),
+                  onPressed: () => _delete(context, ref, l),
+                ),
+              );
+            },
             emptyState: const AppEmptyState(
               icon: Icons.trending_up_rounded,
               title: 'No levels yet',

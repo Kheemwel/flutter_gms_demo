@@ -43,12 +43,36 @@ class TagsTab extends ConsumerWidget {
                   message: 'Add the first one to get started.',
                 )
               : AppDataTable<ItemTag>(
-                  columns: const [
-                    AppDataTableColumn(label: 'Tag'),
-                    AppDataTableColumn(label: 'Expires after', numeric: true),
-                    AppDataTableColumn(label: 'Items using it', numeric: true),
-                    AppDataTableColumn(label: ''),
+                  columns: [
+                    AppDataTableColumn(
+                      label: 'Tag',
+                      sortBy: (t) => t.priorityTag.toLowerCase(),
+                    ),
+                    AppDataTableColumn(
+                      label: 'Expires after',
+                      numeric: true,
+                      sortBy: (t) => t.daysExpired,
+                    ),
+                    AppDataTableColumn(
+                      label: 'Items using it',
+                      numeric: true,
+                      sortBy: (t) => ref.read(itemCountForTagProvider(t.id)),
+                    ),
+                    const AppDataTableColumn(label: ''),
                   ],
+                  mobileTileBuilder: (context, t) {
+                    final int count = ref.watch(itemCountForTagProvider(t.id));
+                    return ListTile(
+                      title: Text(t.priorityTag),
+                      subtitle: Text(
+                        'Expires after ${t.daysExpired} day(s) • $count items',
+                      ),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.delete_outline_rounded),
+                        onPressed: () => _delete(context, ref, t),
+                      ),
+                    );
+                  },
                   rows: [
                     for (final t in tags)
                       AppDataRow<ItemTag>(

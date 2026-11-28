@@ -24,13 +24,18 @@ class MyRequestsTab extends ConsumerWidget {
     }
 
     return AppDataTable<FormRequest>(
-      columns: const [
-        AppDataTableColumn(label: 'Request'),
-        AppDataTableColumn(label: 'Type'),
-        AppDataTableColumn(label: 'Status'),
-        AppDataTableColumn(label: 'Submitted'),
+      columns: [
+        AppDataTableColumn(label: 'Request', sortBy: (r) => r.displayId),
+        AppDataTableColumn(label: 'Type', sortBy: (r) => r.formType.label),
+        AppDataTableColumn(label: 'Status', sortBy: (r) => r.status.index),
+        AppDataTableColumn(label: 'Submitted', sortBy: (r) => r.createdAt),
       ],
       onRowTap: (FormRequest r) => showApprovalDetails(context, request: r),
+      mobileTileBuilder: (context, r) => ListTile(
+        title: Text('${r.displayId} • ${r.formType.label}'),
+        subtitle: Text(_fmt(r.createdAt)),
+        trailing: _StatusPill(status: r.status),
+      ),
       rows: [
         for (final r in requests)
           AppDataRow<FormRequest>(

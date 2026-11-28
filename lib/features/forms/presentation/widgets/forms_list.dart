@@ -36,12 +36,33 @@ class FormsList extends ConsumerWidget {
 
     return AppDataTable<Form>(
       columns: [
-        const AppDataTableColumn(label: 'Form'),
-        const AppDataTableColumn(label: 'Type'),
-        AppDataTableColumn(label: completed ? 'Completed on' : 'Created'),
-        const AppDataTableColumn(label: 'Participants'),
+        AppDataTableColumn(label: 'Form', sortBy: (f) => f.displayId),
+        AppDataTableColumn(label: 'Type', sortBy: (f) => f.formType.label),
+        AppDataTableColumn(
+          label: completed ? 'Completed on' : 'Created',
+          sortBy: (f) => f.createdAt,
+        ),
+        AppDataTableColumn(
+          label: 'Participants',
+          numeric: true,
+          sortBy: (f) => f.participants.length,
+        ),
         const AppDataTableColumn(label: ''),
       ],
+      onRowTap: (form) => _open(context, ref, form),
+      mobileTileBuilder: (context, form) => ListTile(
+        title: Text('${form.displayId} • ${form.formType.label}'),
+        subtitle: Text(
+          '${_fmt(form.createdAt)} • ${form.participants.length} participants',
+        ),
+        trailing: form.status == FormStatus.incomplete
+            ? IconButton(
+                tooltip: 'Delete',
+                icon: const Icon(Icons.delete_outline_rounded),
+                onPressed: () => _delete(context, ref, form),
+              )
+            : const Icon(Icons.chevron_right_rounded),
+      ),
       rows: [
         for (final form in forms)
           AppDataRow<Form>(

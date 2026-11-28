@@ -55,13 +55,37 @@ class AuditTrailPage extends ConsumerWidget {
                         : 'Try a different search term.',
                   )
                 : AppDataTable<AuditLog>(
-                    columns: const [
-                      AppDataTableColumn(label: 'When'),
-                      AppDataTableColumn(label: 'User'),
-                      AppDataTableColumn(label: 'Action'),
-                      AppDataTableColumn(label: 'Description'),
-                      AppDataTableColumn(label: ''),
+                    columns: [
+                      AppDataTableColumn(
+                        label: 'When',
+                        sortBy: (a) => a.createdAt,
+                      ),
+                      AppDataTableColumn(
+                        label: 'User',
+                        sortBy: (a) => (a.userFullName ?? '').toLowerCase(),
+                      ),
+                      AppDataTableColumn(
+                        label: 'Action',
+                        sortBy: (a) => a.action.toLowerCase(),
+                      ),
+                      const AppDataTableColumn(label: 'Description'),
+                      const AppDataTableColumn(label: ''),
                     ],
+                    mobileTileBuilder: (context, a) => ListTile(
+                      title: Text(
+                        a.description,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      subtitle: Text(
+                        '${a.action} • ${a.userFullName ?? '—'} • ${_fmt(a.createdAt)}',
+                      ),
+                      trailing: IconButton(
+                        tooltip: 'Delete entry',
+                        icon: const Icon(Icons.delete_outline_rounded),
+                        onPressed: () => _delete(context, ref, a),
+                      ),
+                    ),
                     rows: [
                       for (final a in entries)
                         AppDataRow<AuditLog>(

@@ -49,10 +49,29 @@ class ItemTable extends ConsumerWidget {
         Expanded(
           child: AppDataTable<LostAndFoundItem>(
             columns: [
-              const AppDataTableColumn(label: 'Item'),
-              const AppDataTableColumn(label: 'Type'),
-              const AppDataTableColumn(label: 'Found'),
-              AppDataTableColumn(label: _thirdColumnLabel),
+              AppDataTableColumn(
+                label: 'Item',
+                sortBy: (i) => i.itemName.toLowerCase(),
+              ),
+              AppDataTableColumn(
+                label: 'Type',
+                sortBy: (i) =>
+                    (typeById[i.itemTypeId]?.itemType ?? '').toLowerCase(),
+              ),
+              AppDataTableColumn(
+                label: 'Found',
+                sortBy: (i) => i.datetimeFound,
+              ),
+              AppDataTableColumn(
+                label: _thirdColumnLabel,
+                sortBy: (i) => switch (tab) {
+                  LostFoundTab.found || LostFoundTab.expired =>
+                    tagById[i.itemTagId] == null
+                        ? null
+                        : i.expirationDate(tagById[i.itemTagId]!),
+                  LostFoundTab.claimed => i.claimedDatetime,
+                },
+              ),
               const AppDataTableColumn(label: ''),
             ],
             onRowTap: (LostAndFoundItem i) {
@@ -61,6 +80,14 @@ class ItemTable extends ConsumerWidget {
                 builder: (_) => ViewItemDialog(item: i),
               );
             },
+            mobileTileBuilder: (context, item) => ListTile(
+              leading: ItemImagePlaceholder(seedId: item.id),
+              title: Text(item.itemName),
+              subtitle: Text(
+                '${typeById[item.itemTypeId]?.itemType ?? '—'} • ${_fmt(item.datetimeFound)}',
+              ),
+              trailing: const Icon(Icons.chevron_right_rounded),
+            ),
             rows: [
               for (final item in items)
                 AppDataRow<LostAndFoundItem>(

@@ -41,16 +41,30 @@ class RequestsByStatusTab extends ConsumerWidget {
 
     return AppDataTable<FormRequest>(
       columns: [
-        const AppDataTableColumn(label: 'Request'),
-        const AppDataTableColumn(label: 'Type'),
-        const AppDataTableColumn(label: 'Teacher'),
+        AppDataTableColumn(label: 'Request', sortBy: (r) => r.displayId),
+        AppDataTableColumn(label: 'Type', sortBy: (r) => r.formType.label),
+        AppDataTableColumn(
+          label: 'Teacher',
+          sortBy: (r) => r.payload.teacherName.toLowerCase(),
+        ),
         if (status == FormRequestStatus.approved)
-          const AppDataTableColumn(label: 'Form'),
+          AppDataTableColumn(
+            label: 'Form',
+            sortBy: (r) => r.resultingFormId ?? '',
+          ),
         if (status == FormRequestStatus.disapproved)
-          const AppDataTableColumn(label: 'Reason'),
-        const AppDataTableColumn(label: 'Submitted'),
+          AppDataTableColumn(
+            label: 'Reason',
+            sortBy: (r) => (r.disapprovalReason ?? '').toLowerCase(),
+          ),
+        AppDataTableColumn(label: 'Submitted', sortBy: (r) => r.createdAt),
       ],
       onRowTap: (FormRequest r) => showApprovalDetails(context, request: r),
+      mobileTileBuilder: (context, r) => ListTile(
+        title: Text('${r.displayId} • ${r.formType.label}'),
+        subtitle: Text('${r.payload.teacherName} • ${_fmt(r.createdAt)}'),
+        trailing: const Icon(Icons.chevron_right_rounded),
+      ),
       rows: [
         for (final r in requests)
           AppDataRow<FormRequest>(
